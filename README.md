@@ -3,7 +3,7 @@
 A declarative/interactive nix pinning system.
 
 TODO:
-- 
+- [ ] Finish [functional spec](./docs/spec/0.1.0/functional.md) 
 - [ ] Add nix shell and default for Nix2
 
 # FAQ
@@ -21,4 +21,4 @@ and with enough knowledge is still a viable language for new projects.
 
 3. Rewrite it in *
 
-No. 
+No.
