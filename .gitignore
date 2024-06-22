@@ -21,6 +21,6 @@
 !meson_options.build
 
 # Project dirs
-!src/
 !nix/
 !docs/ 
+!projects/
