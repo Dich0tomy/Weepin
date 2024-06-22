@@ -1,0 +1,25 @@
+# Exclude everything and opt-in for the files we want to push
+/*
+
+# Basic skeleton files
+!.gitignore
+!LICENSE
+!README.md
+
+# Basic project files
+!flake.nix
+!flake.lock
+
+# Tool configs
+!.clangd
+!.clang-tidy
+!.clang-format
+
+# Build
+!Justfile
+!meson.build
+!meson_options.build
+
+# Project dirs
+!src/
+!nix/
