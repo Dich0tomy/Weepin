@@ -11,7 +11,7 @@ local_deps = [
 ]
 
 executable(
-  'wee',
+  'weepin',
   sources,
   include_directories: include_directories,
   dependencies: [ _dire_test_internal, local_deps ]

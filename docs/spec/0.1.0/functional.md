@@ -9,7 +9,7 @@ The name of the project is `weepin`, but the name of the main executable is call
 
 The main entrypoint of weepin is `weepin.toml` which contains weepin sources.  
 They *can* but *don't have to* contain version informations at this point.  
-Sources can either be added with `wee add ...` or added to the file directly.
+Sources can either be added with `weepin add ...` or added to the file directly.
 
 Weepin will generate a `weepin/` directory which will be imported.  
 Directory instead of a file to reserve the right to add more things to it in further versions.
@@ -47,7 +47,7 @@ Also refers to specific items in the [`weepin.toml` file](#weepintoml-structure)
 
 An item in [`weepin.toml` file](#weepintoml-structure) that doesn't have a version set.
 
-[`wee pin-dirty`](#wee-pin-dirty-options-options) is used to pin such.
+[`weepin pin-dirty`](#wee-pin-dirty-options-options) is used to pin such.
 
 ### Template tag
 
@@ -77,7 +77,7 @@ All `GitRI`s are implicitly `TemplateRI`s of a form similar to `https://host.com
 Contains template tags. Template tags get expanded from attributes passed on the commandline.  
 A template tag is of form `<name>` or `<name1|name2[,|...]>`,
 
-These are later expanded when `wee add`ing by passing `--replace [<name>=]<val>`.
+These are later expanded when `weepin add`ing by passing `--replace [<name>=]<val>`.
 
 The template tag can alternatively be of form `<name=init>`, `<name=init|name2=init[,|...]>`,
 see [Resolvable template tags and RIs](#resolvable-template-tags-and-ris) below for more information.
@@ -99,7 +99,7 @@ To specify a full URL you specify a `TemplateRI`, basically a RI with a template
 A `PinnedRI` is a RI that *already* has all the information for pinning in it,
 e.g. `https://example.com/archive/0.1.2.zip`
 
-These can't be `wee update`d, because no information about version substitution is available.  
+These can't be `weepin update`d, because no information about version substitution is available.  
 If you want to have that possibility, create a `TemplateRI` instead, e.g. `https://example.com/archive/<version>.zip`
 
 ### Resolvable template tags and RIs
@@ -118,39 +118,39 @@ A `GitRI` can be resolvable if it's suffixed with `=init`, e.g.:
 - `gitlab:owner/repo=dev` gitlab with branch
 - `git:https://codeberg.com/Codeberg/org=975ee655a3f19fc0554f2a3186d86c5f4a1abe7c` a resolvable `GitRI` for generic git source with an attached commit
 
-Resolvable RIs are provided for convenience when `wee init`ing or `wee add`ing, instead of:
+Resolvable RIs are provided for convenience when `weepin init`ing or `weepin add`ing, instead of:
 ```shell
-$ wee init
-$ wee add owner/repo -r 0.1.0
-$ wee add repo/baz -r dev
+$ weepin init
+$ weepin add owner/repo -r 0.1.0
+$ weepin add repo/baz -r dev
 ```
 
 It can become
 
 ```shell
-$ wee init
-$ wee add owner/repo=0.1.0 repo/baz=dev
+$ weepin init
+$ weepin add owner/repo=0.1.0 repo/baz=dev
 ```
 
 Or even
 
 ```shell
-$ wee init owner/repo=0.1.0 repo/baz=dev
+$ weepin init owner/repo=0.1.0 repo/baz=dev
 ```
 
 > [!IMPORTANT]
 > `ResolvableRI`s are not `PinnedRI`s!  
 > `PinnedRI`s are a special kind of RIs that are permanently pinned and cannot be upgraded  
 > A resolvable `GitRI` or `TemplateRI` is still of its own kind, but it just uses different syntax  
-> upon `wee add`ing and `wee init`ing which gives it an initial value.
+> upon `weepin add`ing and `weepin init`ing which gives it an initial value.
 
 ## `wee`
   - `-v, --version` Prints version
   - `-h, --help` Prints help
 
-  Defaults to `wee -h`
+  Defaults to `weepin -h`
 
-## `wee add` ((\<WeepinRI> | \<ResolvableRI>) \[POSITIONAL OPTIONS])...
+## `weepin add` ((\<WeepinRI> | \<ResolvableRI>) \[POSITIONAL OPTIONS])...
 Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-n, --name <name>` Gives the pin a custom name.
   The name can use template tags.
@@ -184,16 +184,16 @@ It can be also launched with the `-i, --interactive` flag to pick the revision.
 ### Examples
 
 ```shell
-$ wee add owner/repo=0.1.0
-$ wee add owner/repo=0.1.0 -n myrepo owner/repo2 -d myrepo
-$ wee add owner/repo=0.1.0 -Vn myrepo https://example.com/<ver>.com -t 0.1.1
-$ wee add https://gitlab.company.com/group/owner/repo=f0784ec
-$ wee add git:https://gitea.foo.com/owner/repo -ri develop
-$ wee add https://example.com/<ver>.tar.xz -t 0.1.1 # We can omit the name because there's only one `ver`
-$ wee add https://example.com/<name>/<ver>.tar.xz -t ver=0.1.1 -t name=foo
+$ weepin add owner/repo=0.1.0
+$ weepin add owner/repo=0.1.0 -n myrepo owner/repo2 -d myrepo
+$ weepin add owner/repo=0.1.0 -Vn myrepo https://example.com/<ver>.com -t 0.1.1
+$ weepin add https://gitlab.company.com/group/owner/repo=f0784ec
+$ weepin add git:https://gitea.foo.com/owner/repo -ri develop
+$ weepin add https://example.com/<ver>.tar.xz -t 0.1.1 # We can omit the name because there's only one `ver`
+$ weepin add https://example.com/<name>/<ver>.tar.xz -t ver=0.1.1 -t name=foo
 ```
 
-## `wee init` \[OPTIONS] \[(\<WeepinRI > | \<ResolvableRI>) \[POSITIONAL OPTIONS]]...
+## `weepin init` \[OPTIONS] \[(\<WeepinRI > | \<ResolvableRI>) \[POSITIONAL OPTIONS]]...
 Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-n, --name <name>` Gives the pin a custom name.
   The name can use template tags.
@@ -214,20 +214,20 @@ Initializes `weepin/` (or `<dir>`) and `weepin.toml` (or `<file>`).
 Subsequent invocations will overwrite `weepin/` (or `<dir>`) and `weepin.toml` (or `<file>`).
 
 Unlike `npins` and `niv` doesn't track anything by default,  
-if you want to init with e.g. `nixos-unstable` do `wee init nixos-unstable`.
+if you want to init with e.g. `nixos-unstable` do `weepin init nixos-unstable`.
 
 > [!IMPORTANT]
 > This action creates the `weepin/` sources.
 
 ### Examples
 
-Same as `wee add` + the `-d` option:
+Same as `weepin add` + the `-d` option:
 ```shell
-$ wee init owner/repo=0.1.0 owner/repo2=0.1.1
-$ wee init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
+$ weepin init owner/repo=0.1.0 owner/repo2=0.1.1
+$ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
 ```
 
-## `wee pin-dirty` \[OPTIONS] Options:
+## `weepin pin-dirty` \[OPTIONS] Options:
 - `-i, --interactive` Invalid for `ResolvableRI`s.
 - `-g, --generate` Regenerate the `weepin/` sources.
 
@@ -237,13 +237,13 @@ with pinned dependencies.
 
 ### Examples
 
-Same as `wee add` + the `-d` option
+Same as `weepin add` + the `-d` option
 ```shell
-$ wee init owner/repo=0.1.0 owner/repo2=0.1.1
-$ wee init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
+$ weepin init owner/repo=0.1.0 owner/repo2=0.1.1
+$ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
 ```
 
-## `wee show` \[OPTIONS] \[\<name> \[POSITIONAL OPTIONS]]...
+## `weepin show` \[OPTIONS] \[\<name> \[POSITIONAL OPTIONS]]...
 Positional options, after each `<name>`:
 - `-a, --attrs=attrs...` Picks certain attributes, see [`weepin.toml` structure](#weepintoml-structure) for reference.
 
@@ -256,11 +256,11 @@ Names can use the `*` glob.
 ### Examples
 
 ```shell
-$ wee show neovim -a=name,rev -f json
-$ wee show
-$ wee show neovim nvim-luapad neogit
+$ weepin show neovim -a=name,rev -f json
+$ weepin show
+$ weepin show neovim nvim-luapad neogit
 ```
-## `wee remove` \<name>...
+## `weepin remove` \<name>...
 
 Removes given pins.  
 Accepts `*` glob.
@@ -271,19 +271,19 @@ Accepts `*` glob.
 ### Examples
 
 ```shell
-$ wee remove nixos-unstable
-$ wee remove foo bar baz*
-$ wee remove nvim-*
+$ weepin remove nixos-unstable
+$ weepin remove foo bar baz*
+$ weepin remove nvim-*
 ```
 
-## `wee clear`
+## `weepin clear`
 
 Removes all pins from `weepin.toml` or `<file>`.
 
 > [!IMPORTANT]
 > This action modifies the generated `weepin/` sources.
 
-## `wee repin` [<name> \[POSITIONAL ARGUMENTS]]...
+## `weepin repin` [<name> \[POSITIONAL ARGUMENTS]]...
 Positional arguments:
 - `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
@@ -300,8 +300,8 @@ With positional `-r` changes given parameters of a pin, typically version.
 ### Examples
 
 ```shell
-$ wee repin # Updates everything
-$ wee repin neovim -t v0.9.5 # Rollback to 0.9.5
+$ weepin repin # Updates everything
+$ weepin repin neovim -t v0.9.5 # Rollback to 0.9.5
 ```
 
 # `weepin.toml` structure
@@ -456,6 +456,6 @@ For technical details regarding this directory see [the technical spec](./techni
 
 - Rolling back, enforcing tracking by git?
 
-- Caching of downloaded `wee add`?
+- Caching of downloaded `weepin add`?
 
 - Homepage, description, such?
