@@ -7,11 +7,11 @@ I wasn't 100% happy with both npins and niv so I made this.
 The name of the project is `weepin`, but the name of the main executable is called
 `wee`.
 
-The main entrypoint of weepin is `weepin.toml` which contains weepin sources.
-They *can* but *don't have to* contain version informations at this point.
+The main entrypoint of weepin is `weepin.toml` which contains weepin sources.  
+They *can* but *don't have to* contain version informations at this point.  
 Sources can either be added with `wee add ...` or added to the file directly.
 
-Weepin will generate a `weepin/` directory which will be imported.
+Weepin will generate a `weepin/` directory which will be imported.  
 Directory instead of a file to reserve the right to add more things to it in further versions.
 
 ```nix
@@ -40,21 +40,20 @@ Each of the ones before is generally referred to as `WeepinRI` (Weepin Resource 
 
 ### Pin
 
-Pin loosely refers to a dependency pinned to a specific revision, version, url, etc.
+Pin loosely refers to a dependency pinned to a specific revision, version, url, etc.  
 Also refers to specific items in the [`weepin.toml` file](#weepintoml-structure).
 
 ### Dirty pin
 
 An item in [`weepin.toml` file](#weepintoml-structure) that doesn't have a version set.
 
-[`wee pin-dirty`](# `wee pin-dirty`) is used to pin such.
+[`wee pin-dirty`](#wee-pin-dirty-options-options) is used to pin such.
 
 ### Template tag
 
-A template tag a special substring of form `<name>` or `<name=init>`
-Which is later expanded with a specific value.
+A template tag a special substring of form `<name>` or `<name=init>` which is later expanded with a specific value.
 
-The latter is a special type of a template tag called a `resorvable template tag`.
+The latter is a special type of a template tag called a `resorvable template tag`.  
 See [Resolvable template tags and RIs](#resolvable-template-tags-and-ris) below for more information on that.
 
 ### `GitRI`
@@ -63,18 +62,19 @@ Pints to a git resource like github, gitlab, sourcehut or a generic one.
 All `GitRI`s are implicitly `TemplateRI`s of a form similar to `https://host.com/owner/repo/<rev>`
 (dependent on the service) inside, to easily substitute branche, revision, etc.
 
-`GitRI`s have several forms:
-- GitHub - `[github:]owner/repo`
 <!-- TODO: Think through if I should add group/owner/repo as an alias for gitlab:group/owner/repo -->
-- GitLab - `gitlab:[group/]owner/repo` or `https://gitlab.example.com[/group]/owner/repo`
-- Sourcehut `srht:owner/repo` or
-- Generic git `git:owner/repo` or `git:https://example.com/owner/repo` (e.g. for codeberg, gitea, etc.)
+
+`GitRI`s have several forms:
+- GitHub - `owner/repo` or `github:owner/repo` or `gh:owner/repo`
+- GitLab - `gl:[group/]owner/repo` or `gitlab:[group/]owner/repo` or `https://gitlab.example.com[/group]/owner/repo`
+- Sourcehut - `srht:owner/repo`
+- Generic git - `git:owner/repo` or `git:https://example.com/owner/repo` (e.g. for codeberg, gitea, etc.)
 
 > [!NOTE]
 > These are not *neccesarilly* reflected in the internal lockfile or `weepin.toml`.
 
 ### `TemplateRI`
-Contains template tags. Template tags get expanded from attributes passed on the commandline.
+Contains template tags. Template tags get expanded from attributes passed on the commandline.  
 A template tag is of form `<name>` or `<name1|name2[,|...]>`,
 
 These are later expanded when `wee add`ing by passing `--replace [<name>=]<val>`.
@@ -84,7 +84,7 @@ see [Resolvable template tags and RIs](#resolvable-template-tags-and-ris) below 
 
 To specify a full URL you specify a `TemplateRI`, basically a RI with a template tag inside, like so:
 - `http://example.com/archive/<version>.zip`
-(or a [`PinnedRI`](#pinneduri))
+(or a [`PinnedRI`](#pinnedri))
 
 ### `ChannelRI`
 `ChannelRIs` match the `^\w*?-\d{2}\.\d{2}(?:\w*?)?$` regex and resolve to nixos channel exprs:
@@ -99,15 +99,15 @@ To specify a full URL you specify a `TemplateRI`, basically a RI with a template
 A `PinnedRI` is a RI that *already* has all the information for pinning in it,
 e.g. `https://example.com/archive/0.1.2.zip`
 
-These can't be `wee update`d, because no information about version substitution is available.
-If you want to have that possibility, create a TemplateRI instead, e.g. `https://example.com/archive/<version>.zip`
+These can't be `wee update`d, because no information about version substitution is available.  
+If you want to have that possibility, create a `TemplateRI` instead, e.g. `https://example.com/archive/<version>.zip`
 
 ### Resolvable template tags and RIs
 A normal template tag only defines the template name - `<name>`,
 but it can also optionally define a value its initialized with - `<name=init>`,
 such a tag is called a **resorvable template tag**.
 
-`ResolvableRI`s are RIs that contain all the information to resolve them in them.
+`ResolvableRI`s are RIs that contain all the information to resolve them in them.  
 `ChannelRI`s and `PinnedRI`s are already `ResolvableRI`s.
 
 A `TemplateRI` can be resolvable if it contains a resolvable template tag,
@@ -118,28 +118,30 @@ A `GitRI` can be resolvable if it's suffixed with `=init`, e.g.:
 - `gitlab:owner/repo=dev` gitlab with branch
 - `git:https://codeberg.com/Codeberg/org=975ee655a3f19fc0554f2a3186d86c5f4a1abe7c` a resolvable `GitRI` for generic git source with an attached commit
 
-Resolvable RIs are provided for convenience when `wee init`ing or `wee add`ing,
-instead of:
+Resolvable RIs are provided for convenience when `wee init`ing or `wee add`ing, instead of:
 ```shell
 $ wee init
 $ wee add owner/repo -r 0.1.0
 $ wee add repo/baz -r dev
-
 ```
+
 It can become
+
 ```shell
 $ wee init
 $ wee add owner/repo=0.1.0 repo/baz=dev
 ```
-And even
+
+Or even
+
 ```shell
 $ wee init owner/repo=0.1.0 repo/baz=dev
 ```
 
 > [!IMPORTANT]
-> `ResolvableRI`s are not `PinnedRI`s!
-> `PinnedRI`s are a special kind of RIs that are permanently pinned and cannot be upgraded
-> A resolvable `GitRI` or `TemplateRI` is still of its own kind, but it just uses different syntax
+> `ResolvableRI`s are not `PinnedRI`s!  
+> `PinnedRI`s are a special kind of RIs that are permanently pinned and cannot be upgraded  
+> A resolvable `GitRI` or `TemplateRI` is still of its own kind, but it just uses different syntax  
 > upon `wee add`ing and `wee init`ing which gives it an initial value.
 
 ## `wee`
@@ -156,10 +158,13 @@ Positional, after each `WeepinRI` / `ResolvableRI`:
   `ChannelRI`s names are derived from the channel name.
   `TemplateRI` and `PinnedRI` names are derived from the last path element without extension.
 - `-V, --no-validate` Disable validating if the given resource is reachable on the network before adding.
+
 - `-i, --interactive` Invalid for `ResolvableRI`s.
   Weepin will try to determine available versions for a given resource and prompt to pick.
+
 - `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
+
 - `-d, --depends <name>...` Defines a dependency of resource on other resource names.
 
 Adds a specific resource to `weepin.toml` (or `<file>`).
@@ -195,9 +200,12 @@ Positional, after each `WeepinRI` / `ResolvableRI`:
   `GitRIs` names are derived from repo name,
   `ChannelRI`s names are derived from the channel name.
   `TemplateRI` and `PinnedRI` names are derived from the last path element without extension.
+
 - `-V, --no-validate` Disable validating if the given resource is reachable on the network before adding.
+
 - `-i, --interactive` Invalid for `ResolvableRI`s.
   Weepin will try to determine available versions for a given resource and prompt to pick.
+
 - `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
 
@@ -205,7 +213,7 @@ Initializes `weepin/` (or `<dir>`) and `weepin.toml` (or `<file>`).
 
 Subsequent invocations will overwrite `weepin/` (or `<dir>`) and `weepin.toml` (or `<file>`).
 
-Unlike `npins` and `niv` doesn't track anything by default,
+Unlike `npins` and `niv` doesn't track anything by default,  
 if you want to init with e.g. `nixos-unstable` do `wee init nixos-unstable`.
 
 > [!IMPORTANT]
@@ -213,14 +221,17 @@ if you want to init with e.g. `nixos-unstable` do `wee init nixos-unstable`.
 
 ### Examples
 
-Same as `wee add` + the `-d` option
+Same as `wee add` + the `-d` option:
 ```shell
 $ wee init owner/repo=0.1.0 owner/repo2=0.1.1
-$ wee init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins ``` ## `wee pin-dirty` \[OPTIONS] Options:
+$ wee init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
+```
+
+## `wee pin-dirty` \[OPTIONS] Options:
 - `-i, --interactive` Invalid for `ResolvableRI`s.
 - `-g, --generate` Regenerate the `weepin/` sources.
 
-Weepin will try to determine available versions for a given resource and prompt to pick.
+Weepin will try to determine available versions for a given resource and prompt to pick.  
 Parses the `weepin.toml` file and looks for [dirty pins](#dirty-pin), modifies the file in place
 with pinned dependencies.
 
@@ -232,14 +243,14 @@ $ wee init owner/repo=0.1.0 owner/repo2=0.1.1
 $ wee init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
 ```
 
-## `wee show` \[OPTIONS] \[<name> \[POSITIONAL OPTIONS]]...
-Positional options, after each `<name>`
+## `wee show` \[OPTIONS] \[\<name> \[POSITIONAL OPTIONS]]...
+Positional options, after each `<name>`:
 - `-a, --attrs=attrs...` Picks certain attributes, see [`weepin.toml` structure](#weepintoml-structure) for reference.
 
 Options:
 - `-f, --format pretty|json|toml` Format to use
 
-Shows all pins matching given `name`s or all if nothing else provided.
+Shows all pins matching given `name`s or all if nothing else provided.  
 Names can use the `*` glob.
 
 ### Examples
@@ -249,9 +260,9 @@ $ wee show neovim -a=name,rev -f json
 $ wee show
 $ wee show neovim nvim-luapad neogit
 ```
-## `wee remove` <name>
+## `wee remove` \<name>...
 
-Removes a given pin.
+Removes given pins.  
 Accepts `*` glob.
 
 > [!IMPORTANT]
@@ -261,17 +272,16 @@ Accepts `*` glob.
 
 ```shell
 $ wee remove nixos-unstable
-$ wee remove foo
+$ wee remove foo bar baz*
 $ wee remove nvim-*
 ```
 
 ## `wee clear`
+
 Removes all pins from `weepin.toml` or `<file>`.
 
 > [!IMPORTANT]
 > This action modifies the generated `weepin/` sources.
-
-### Examples
 
 ## `wee repin` [<name> \[POSITIONAL ARGUMENTS]]...
 Positional arguments:
@@ -307,9 +317,9 @@ tag = ''
 # `weepin/` directory
 
 > [!IMPORTANT]
-> The **only two** garuantees about this directory are:
+> The **only two** garuantees about this directory are:  
 > - It's importable from Nix via `import ./weepin {};`
-> (note the `{}` at the end! It's a function to allow for additional arguments passed to the internal loader for future versions)
+> (note the `{}` at the end! It's a function to allow for additional arguments passed to the internal loader for future versions)  
 > - The structure and properties below are guaranteed
 >  
 > This is to allow changes to the structure and files inside for future versions.
@@ -323,32 +333,32 @@ tag = ''
 
 `A(B)` means that `A` inherits attributes from `B`.
 
-These are the abstract RI kinds and their guaranteed attributes after importing.
+These are the abstract RI kinds and their guaranteed attributes after importing.  
 Note that these are abstract and don't fully reflect the contents of the internal lock file
 or `weepin.toml`:
-- `PinnedRI`
+- `PinnedRI`:
   - `kind`: `"pinned"|"template"|"channel"|"git"|"github"|"gitlab"` - Kind of the resource
   - `url`: `string` - Fully resolvable (no templates) url of the resource
   - `hash`: `string` - Hash of the resource
   - `outPath` - The result of evaluating a fetcher for the given source
 
-  - `TemplateRI(PinnedRI)`
+  - `TemplateRI(PinnedRI)`:
     - `extra.template`: `string` - Template for `url`, see [`TemplateRI`](#templateri)
     - `extra.attrs`: `table<string, string>` - Used template tags and their values
 
-    - `ChannelRI(TemplateRI)`
+    - `ChannelRI(TemplateRI)`:
       - `extra.attrs.release`: `string` - Specific release.
           This is not e.g., `nixos-unstable`, but `nixos-24.11pre641786.d603719ec6e2`.
           If you want the channel name just use the name of the pin.
 
-    - `GitRI(TemplateRI)`
+    - `GitRI(TemplateRI)`:
       - `extra.attrs.owner`: `string` - Owner name
       - `extra.attrs.name`: `string` - Repository name
       - `extra.attrs.commit`: `string` - Specific commit
       - `extra.attrs.branch`: `string` - Specific branch
       - `extra.attrs.tag`: `string|null` - Set if `extra.repo.commit` belongs to a tag
 
-      - `GitlabRI(GitRI)`
+      - `GitlabRI(GitRI)`:
         - `extra.attrs.group`: `string|null` - Optional group name
 
 An example with all of the kinds above (`hash` and `outPath` ommited for brievity):
@@ -426,7 +436,7 @@ For technical details regarding this directory see [the technical spec](./techni
   This release won't support importing sources from niv/npins or `flake.lock`.
 
 - Backwards compatible `weepin/`?
-  In stable?
+  In stable?  
   Operations on the `weepin/` directory which would upgrade
   the framework.
   - `migrate` Migrates to new format, saves info about previous version
