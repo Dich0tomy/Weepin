@@ -16,8 +16,9 @@ running some magic command which would pin with the latest versions.
 
 2. Why C++?
 
-Because it's fast if used correctly, it's the language I know the best
-and with enough knowledge is still a viable language for new projects.
+- it's the language I know the best,
+- it's fast if used correctly,
+- with enough knowledge it's still a viable language for new projects
 
 3. Rewrite it in *
 
