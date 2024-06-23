@@ -151,17 +151,19 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
 
 ## `sources.lock`
 
-JSON5 format? Or JSON?.
+<!-- TODO: Fill this out -->
 
-```json5
+Classic JSON format.
+
+```json
 {
-  version: 1,
-  pins: {
-    resource: {
-      url: "https://example.com/resource-0.1.0.tar.gz",
+  "version": 1,
+  "pins": {
+    "resource": {
+      "url": "https://example.com/resource-0.1.0.tar.gz",
     },
-    resource2: { // Template with one attr
-      url: "https://example.com/resource-0.1.0.tar.gz", 
+    "resource2": {
+      "url": "https://example.com/resource-0.1.0.tar.gz", 
     },
   },
 }
