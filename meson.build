@@ -1,3 +1,7 @@
+# NOTE: 
+# This project is expected to be built under a Nix environment.
+# No guarantees are made about the standalone capabilities of this
+# build under non-Nix environments.
 project(
   'weepin', 'cpp',
   version : files('./VERSION'),

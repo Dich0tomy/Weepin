@@ -8,6 +8,9 @@ include_directories = include_directories(
 
 local_deps = [
   dependency('fmt')
+  dependency('optional')
+  dependency('expected')
+  dependency('magic-enum')
 ]
 
 executable(

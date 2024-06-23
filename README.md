@@ -7,7 +7,7 @@
 A robust declarative (json5)/interactive (weepin add) nix pinning system akin to niv/npins.
 
 TODO:
-- [ ] Finish [functional spec](./docs/spec/0.1/functional.md) and [technical spec](./docs/spec/0.1/technical.md)
+- [x] Finish [functional spec](./docs/spec/0.1/functional.md) and [technical spec](./docs/spec/0.1/technical.md) first draft
 - [ ] Create json52nix
 - [ ] Impl that shit:
   - [ ] ?
