@@ -20,7 +20,7 @@
   - `x86_64-darwin`
   - `x86_64-linux`
 - **Build**: Meson & Nix
-- **Language**: C++23
+- **Language**: C++23 - [FAQ - 2. Why C++?](../../faq.md#2-why-c)
 - **Compiler**:
   - Default: g++
   - Other: clang++
