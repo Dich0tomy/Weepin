@@ -1,18 +1,29 @@
 <!-- vim-markdown-toc GFM -->
 
 * [Functional spec of weepin](#functional-spec-of-weepin)
+* [What is Weepin](#what-is-weepin)
+  * [Why not use flake inputs?](#why-not-use-flake-inputs)
+  * [Main objectives](#main-objectives)
+  * [Differences between niv and npins](#differences-between-niv-and-npins)
+    * [Prototyping speed](#prototyping-speed)
+    * [Optimized for git and channels](#optimized-for-git-and-channels)
+  * [General info](#general-info)
 * [Sample usage](#sample-usage)
 * [Conventions](#conventions)
 * [Definitions](#definitions)
+  * [Manifest](#manifest)
   * [Pin](#pin)
   * [Weepin loader](#weepin-loader)
   * [Final syntax](#final-syntax)
   * [Dirty pin](#dirty-pin)
     * [Dirty channel resources](#dirty-channel-resources)
-    * [Dirty git resource pins](#dirty-git-resource-pins)
-    * [Dirty template resource pins](#dirty-template-resource-pins)
-    * [Template tag](#template-tag)
-    * [Name inference](#name-inference)
+    * [Dirty git resources](#dirty-git-resources)
+    * [Dirty template resources](#dirty-template-resources)
+  * [Template tag](#template-tag)
+  * [Name inference](#name-inference)
+    * [Name inference priority](#name-inference-priority)
+    * [`PinnedRI`s and `TemplateRI`s inference](#pinnedris-and-templateris-inference)
+    * [`GitRI` inference](#gitri-inference)
   * [Resource Identifiers](#resource-identifiers)
     * [`PinnedRI`](#pinnedri)
     * [`ChannelRI`](#channelri)
@@ -22,20 +33,21 @@
     * [Resolvable template tags and RIs](#resolvable-template-tags-and-ris)
 * [Cli interface](#cli-interface)
   * [`weepin`](#weepin)
-  * [`weepin add`](#weepin-add)
-    * [Examples](#examples)
   * [`weepin init`](#weepin-init)
+    * [Examples](#examples)
+  * [`weepin add`](#weepin-add)
     * [Examples](#examples-1)
   * [`weepin pin-dirty`](#weepin-pin-dirty)
     * [Examples](#examples-2)
   * [`weepin show`](#weepin-show)
     * [Examples](#examples-3)
-  * [`weepin remove`](#weepin-remove)
-    * [Examples](#examples-4)
-  * [`weepin clear`](#weepin-clear)
   * [`weepin repin`](#weepin-repin)
+    * [Examples](#examples-4)
+  * [`weepin remove`](#weepin-remove)
     * [Examples](#examples-5)
-* [The `weepin.json5` file](#the-weepinjson5-file)
+  * [`weepin clear`](#weepin-clear)
+  * [`weepin version`](#weepin-version)
+* [The manifest file](#the-manifest-file)
   * [Pinned resources](#pinned-resources)
   * [Channel resources](#channel-resources)
   * [Git resources](#git-resources)
@@ -45,6 +57,7 @@
     * [generic Git](#generic-git)
   * [Templated resources](#templated-resources)
 * [The `weepin/` directory](#the-weepin-directory)
+  * [Structure](#structure)
   * [Properties](#properties)
 * [Common use cases](#common-use-cases)
 * [Differences between npins and niv](#differences-between-npins-and-niv)
@@ -54,7 +67,7 @@
 * [Goals for *some* future release](#goals-for-some-future-release)
 * [Not sure if I'll ever implement these](#not-sure-if-ill-ever-implement-these)
 * [Non-goals for **any** release](#non-goals-for-any-release)
-* [Known issues](#known-issues)
+* [Known issues and questions](#known-issues-and-questions)
 
 <!-- vim-markdown-toc -->
 
@@ -64,6 +77,8 @@
 > This is a **pre implementation** draft, which means it's *just* an idea and no code yet.
 > It may change if I see some technical limitations (like slow nix evals).
 
+# What is Weepin
+
 Weepin is an application for pinning nix sources interactively and declaratively.
 
 I wasn't 100% happy with both npins and niv so I made this.
@@ -71,12 +86,58 @@ I wasn't 100% happy with both npins and niv so I made this.
 If  you're not familar with the tools above - they are used to pin resources, not necesarilly Nix ones.  
 Sample resources include nix channels, sources for plugins, assets and such.
 
-Flakes allow to pin such with `flake = false`, but this typically neither suffices nor is idiomatic.  
-I've discussed with lots of people who strongly believe Nix inputs should only be used for Nix sources.  
-Flakes haven't been finalized yet as well, so pinning such resources with `inputs` can be not future proof.
+## Why not use flake inputs?
+
+Flakes allow to pin non-nix resources with `flake = false`, but this isn't very idiomatic and has a couple problems.  
+I've talked with lots of people who strongly believe Nix inputs should only be used for Nix sources.  
+
+- Flakes haven't been finalized yet as well, so pinning such resources with `inputs` can be not future proof.
+- Nix has to query the pinned resources each time to make sure they are in sync (which can also cause rate limits!).
+- Each flake that uses the flake with resources in inputs also inherits those inputs (recursively if `inputs.name.flake` isn't `false`!)
+
+## Main objectives
+
+- [x] Be optimized for git and channel resources as these are the most commonly pinned resources
+- [x] Have a manifest file
+- [x] Have a simple and easily prototypable manifest syntax
+- [x] Have a simple CLI interface
+- [x] Be future proof
+- [x] Make it hard to do things wrong
+
+## Differences between niv and npins
+
+### Prototyping speed
+
+Weepin is made specifically for speed, you can dirtily list your resources in a file and then run a command to actually pin them.
+Neither niv nor npins have that feature.
+
+### Optimized for git and channels
+
+Weepin is optimized for git and channel resources in many places.
+
+Git resource identifiers and their respective manifest syntax are compact and concise.
+
+Channel names are simply.. channel names - `weepin add nixos-unstable`, `weepin add nixos-unstable -n nixpkgs`
+  - In npins to pin a github resource you'd do:
+  ```shell
+  npins add github foo bar
+  ```
+
+  But if that github resource doesn't have a tag defined, you'd have to specify each commit by hand **with** a branch attached:
+  ```shell
+  npins add github --branch branch --at commit foo bar
+  ```
+
+  - In niv
+
+
+- Definitely more future proof than niv and npins (for the end user), the interface is clearly defined for the user
+    and the implementation part is easily extendable without breaking the interface.
+
+## General info
 
 - The name of the main executable is `weepin`.
-- The main entrypoint of weepin is `weepin.json5` which contains weepin sources.  
+- The main entrypoint of weepin is [the manifest](#the-manifest-file) which contains weepin sources.  
   They *can* but *don't have to* contain version information at this point (see [Dirty pin](#dirty-pin)).  
 
 The source of truth for pins is the `weepin/` directory.
@@ -96,6 +157,8 @@ pinned = import ./weepin {};
 # Sample usage
 
 <!-- TODO -->
+<!-- Note about how it's not 100% pinning for unsure resources -->
+<!-- Note about not using versions in resources, ideally -->
 
 # Conventions
 
@@ -113,10 +176,14 @@ pinned = import ./weepin {};
 
 # Definitions
 
+## Manifest
+
+Refers to the declarative file for listing resources - `weepin.json5`.
+
 ## Pin
 
 Pin loosely refers to a dependency pinned to a specific revision, version, url, etc.  
-Also refers to specific items in the [`weepin.json5` file](#the-weepinjson5-file).
+Also refers to specific items in [the manifest](#the-manifest-file).
 
 ## Weepin loader
 
@@ -124,9 +191,9 @@ Internal machinery ran when doing `import ./weepin {}` that loads all the pins.
 
 ## Final syntax
 
-The syntax that is a 100% valid `weepin.json5` syntax, can be parsed and used by the weepin loader.
+The syntax that is a 100% valid [manifest](#the-manifest-file) syntax, can be parsed and used by the [weepin loader](#weepin-loader).
 
-Note, that the syntax of the file has to be a 100% conformant with `JSON5`, it's just that
+Note, that the syntax of the file has to be a 100% conformant with the underlying manifest format, it's just that
 weepin enforces a certain structure of the file of form:
 
 ```json5
@@ -142,7 +209,7 @@ See [Dirty pin](#dirty-pin) for more info.
 
 ## Dirty pin
 
-An item in [the `weepin.json5` file](#the-weepinjson5-file) that doesn't have all the necessary
+An item in [the manifest](#the-manifest-file) that doesn't have all the necessary
 information for pinning, like git revision or template values.
 
 A dirty pin is also an item that has an incorrect [final syntax](#final-syntax).
@@ -159,7 +226,7 @@ Only git, channel and template resources can be dirty.
 }
 ```
 
-### Dirty git resource pins
+### Dirty git resources
 
 ```json5
 {
@@ -185,7 +252,7 @@ Only git, channel and template resources can be dirty.
 }
 ```
 
-### Dirty template resource pins
+### Dirty template resources
 
 ```json5
 {
@@ -197,37 +264,74 @@ Only git, channel and template resources can be dirty.
 }
 ```
 
-### Template tag
+## Template tag
 
 A template tag a special substring of form `<name>` or `<name:init>` which is later expanded with a specific value.
 
 The latter is a special type of a template tag called a `resolvable template tag`.  
 See [Resolvable template tags and RIs](#resolvable-template-tags-and-ris) below for more information on that.
 
-### Name inference
+The name `tag` and `template tag` is used interchangeably.
+
+## Name inference
 
 Name inference is a mechanism of inferring pin names from resource identifiers.
 
 It's used in the commandline while adding RIs without explicit `-n, --name`.
 `weepin` will inform about inferred names.
 
-For pinned and templated resources we look at the last part of the path and match `<name>.<ext>` or `<name>-<ver>.<ext>`.
+> [!NOTE]
+> After readnig this section you may wonder why isn't `<ver>` used
+> anywhere in the inference chain. The answer to that is that we want to keep the users away from potentially
+> unsafe or unstable things.
+>
+> Suggesting the version in the name may sound okay at first thought, but if you
+> repin the resource later it will either not tell the truth anymore or you will have to update
+> the name and references in your code as well.
+>
+> It's the same reason we don't allow for template tags in pin names.
+
+Read [Resource identifiers](#resource-identifiers) first.
+
+### Name inference priority
+
+If a name is inferred and another name like this already exists,
+the name inference mechanism will try to infer a longer name, with certain priority, if possible.
+
+Otherwise, it will error.
+
+### `PinnedRI`s and `TemplateRI`s inference
+
+For templated resources the inference is only done *after* expanding the tags.
+
+**sld** - second level domain.
+
+URLs are deconstructed like so:
+- `https://foo.bar.baz.example.com/fooga-0.1.tar.xz`
+- `https://foo.bar.baz.<sld>.com/<name>-<ver>.tar.xz`
+
+Valid `<name>` is *anything* after `/` and before `-`.
 Valid `<ver>` are semver versions and simple versions like `1` and `0.1`.
 
-- `https://example.com/fooga-0.1.tar.xz` - `fooga`
-- `https://example.com/fooga-<ver>.tar.xz` - `fooga`
-- `https://example.com/<name>-<ver>.tar.xz` - whatever `<name>` will be after expansion
+Inference priority:
+- `<name>` - `fooga`
+- `<sld>-<name>-<ver>` - `example-fooga`
+- **error**
 
-In other cases we look at the secod level domain:
-- `https://example.com/<ver>.tar.xz` - `example`
-- `https://foo.boo.example.com/<ver>.tar.xz` - `example`
+### `GitRI` inference
 
-These examples are ambiguous and will error:
-- `https://example.com/bar-abc.tar.xz` - `abc` could very well be a commit but we don't know, `-n` is required
+Internally, `GitRI`s are turned into `TemplateRI`s, the specific tags are not disclosed as they are implementation
+defined and we don't want to couple user's perceived interface with the implementation, but
+the exposition only tags for this case are:
+- `<name>` - name of the repository
+- `<owner>` - owner of the repository
+- `<group>` - group in which the repository resides, this doesn't *always* exist
 
-For templated resources the inference is only done after expanding the tags.
-
-For git identifiers the name is inferred from the repository name.
+Inference priority:
+- `<name>` - `foo`
+- `<owner>-<name>` - `bar-foo`
+- `<group>-<owner>-<name>` - `qoox-bar-foo` (if exists)
+- **error**
 
 ## Resource Identifiers
 
@@ -252,6 +356,9 @@ If you want to have that possibility, create a `TemplateRI` instead, e.g. `https
 ### `GitRI`
 Pins to a git resource like github, gitlab, sourcehut or a generic one.
 
+Internally they are turned into `TemplateRI`s of specific services URLs with `<owner>` `<repo>` and `<rev>` tags
+(this is important if you want to fully understand how name inference for them works).
+
 #### Specific services RIs
 
 `GitRI`s have several forms:
@@ -272,7 +379,7 @@ Pins to a git resource like github, gitlab, sourcehut or a generic one.
   - `git:127.0.0.1[group/]/owner/repo`
 
 > [!NOTE]
-> These are not *necesarilly* reflected in the internal lockfile or `weepin.json5`.
+> These are not *necesarilly* reflected in the internal lockfile or manifest.
 
 ### `TemplateRI`
 Contains [template tags](#template-tag).  
@@ -329,10 +436,11 @@ $ weepin init owner/repo/0.1.0 repo/baz/dev
 # Cli interface
 
 ## `weepin`
-  - `-v, --version` Prints version
   - `-h, --help` Prints help
 
   Defaults to `weepin -h`
+
+  There's no `-v, --version`, use [`weepin version`](#weepin-version) instead.
 
 Subcommands:
   - `add`
@@ -343,15 +451,12 @@ Subcommands:
   - `clear`
   - `repin`
 
-## `weepin add`
-  `((<WeepinRI> | <ResolvableRI>) [POSITIONAL OPTIONS])...`
+## `weepin init`
+  `[OPTIONS] [(<WeepinRI > | <ResolvableRI>) [POSITIONAL OPTIONS]]...`
 
 Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-n, --name <name>` Gives the pin a custom name.
-  The name can use template tags.
-  `GitRI`s names are derived from repo name,
-  `ChannelRI`s names are derived from the channel name.
-  `TemplateRI` and `PinnedRI` names are derived from the last path element without extension.
+
 - `-V, --no-validate` Disable validating if the given resource is reachable on the network before adding.
 
 - `-i, --interactive` Invalid for `ResolvableRI`s.
@@ -360,7 +465,38 @@ Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
 
-Adds a specific resource to `weepin.json5`.
+Initializes `weepin/` and [the manifest](#the-manifest-file).
+Subsequent invocations will overwrite these.
+
+Unlike `npins` and `niv` doesn't track anything by default,  
+if you want to init with e.g. `nixos-unstable` do `weepin init nixos-unstable`.
+
+> [!IMPORTANT]
+> This action creates the `weepin/` sources.
+
+### Examples
+
+Same as `weepin add` + the `-d` option:
+```shell
+$ weepin init owner/repo=0.1.0 owner/repo2=0.1.1
+$ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
+```
+
+## `weepin add`
+  `((<WeepinRI> | <ResolvableRI>) [POSITIONAL OPTIONS])...`
+
+Positional, after each `WeepinRI` / `ResolvableRI`:
+- `-n, --name <name>` Gives the pin a custom name.
+
+- `-V, --no-validate` Disable validating if the given resource is reachable on the network before adding.
+
+- `-i, --interactive` Invalid for `ResolvableRI`s.
+  Weepin will try to determine available versions for a given resource and prompt to pick.
+
+- `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
+  Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
+
+Adds a specific resource to [the manifest](#the-manifest-file).
 
 For git RIs it adds the newest available tag or commit by default,
 unless `-r, --replace` is passed (it accepts commits, tags and branches).
@@ -388,42 +524,6 @@ $ weepin add https://example.com/<ver>.tar.xz -t 0.1.1 # Name will be inferred f
 $ weepin add https://example.com/<name>/<ver>.tar.xz -t ver=0.1.1 -tname=foo
 ```
 
-## `weepin init`
-  `[OPTIONS] [(<WeepinRI > | <ResolvableRI>) [POSITIONAL OPTIONS]]...`
-
-Positional, after each `WeepinRI` / `ResolvableRI`:
-- `-n, --name <name>` Gives the pin a custom name.
-  The name can use template tags.
-  `GitRI`s names are derived from repo name,
-  `ChannelRI`s names are derived from the channel name.
-  `TemplateRI` and `PinnedRI` names are derived from the last path element without extension.
-
-- `-V, --no-validate` Disable validating if the given resource is reachable on the network before adding.
-
-- `-i, --interactive` Invalid for `ResolvableRI`s.
-  Weepin will try to determine available versions for a given resource and prompt to pick.
-
-- `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
-  Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
-
-Initializes `weepin/` and `weepin.json5`.
-
-Subsequent invocations will overwrite `weepin/` and `weepin.json5`.
-
-Unlike `npins` and `niv` doesn't track anything by default,  
-if you want to init with e.g. `nixos-unstable` do `weepin init nixos-unstable`.
-
-> [!IMPORTANT]
-> This action creates the `weepin/` sources.
-
-### Examples
-
-Same as `weepin add` + the `-d` option:
-```shell
-$ weepin init owner/repo=0.1.0 owner/repo2=0.1.1
-$ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
-```
-
 ## `weepin pin-dirty`
   `[OPTIONS]`
 
@@ -432,7 +532,7 @@ Options:
 - `-g, --generate` Regenerate the `weepin/` sources.
 
 Weepin will try to determine available versions for a given resource and prompt to pick.  
-Parses the `weepin.json5` file and looks for [dirty pins](#dirty-pin), modifies the file in place
+Parses [the manifest](#the-manifest-file) file and looks for [dirty pins](#dirty-pin), modifies the file in place
 with pinned dependencies.
 
 ### Examples
@@ -447,7 +547,7 @@ $ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pi
   `[OPTIONS] [<name> [POSITIONAL OPTIONS]]...`
 
 Positional options, after each `<name>`:
-- `-a, --attrs=attrs...` Picks certain attributes, see the [`weepin.json5` structure](#the-weepinjson5-file) for reference.
+- `-a, --attrs=attrs...` Picks certain attributes, see [the manifest structure](#the-manifest-file) for reference.
 
 Options:
 - `-f, --format pretty|json|toml` Format to use
@@ -456,35 +556,11 @@ Shows all pins matching given `name`s or all if nothing else provided.
 Names can use the `*` glob.
 
 ### Examples
-
 ```shell
 $ weepin show neovim -a=name,rev -f json
 $ weepin show
 $ weepin show neovim nvim-luapad neogit
 ```
-## `weepin remove`
-  `<name>...`
-
-Removes given pins.  
-Accepts `*` glob.
-
-> [!IMPORTANT]
-> This action modifies the generated `weepin/` sources.
-
-### Examples
-
-```shell
-$ weepin remove nixos-unstable
-$ weepin remove foo bar baz*
-$ weepin remove nvim-*
-```
-
-## `weepin clear`
-
-Removes all pins from `weepin.json5`.
-
-> [!IMPORTANT]
-> This action modifies the generated `weepin/` sources.
 
 ## `weepin repin`
   `[<name> [POSITIONAL ARGUMENTS]]...`
@@ -503,15 +579,42 @@ With name arguments updates given pins.
 With positional `-r` changes given parameters of a pin, typically version.
 
 ### Examples
-
 ```shell
 $ weepin repin # Updates everything
 $ weepin repin neovim -t v0.9.5 # Rollback to 0.9.5
 ```
 
-# The `weepin.json5` file
+## `weepin remove`
+  `<name>...`
 
-[JSON5 format](https://json5.org/).
+Removes given pins.  
+Accepts `*` glob.
+
+> [!IMPORTANT]
+> This action modifies the generated `weepin/` sources.
+
+### Examples
+```shell
+$ weepin remove nixos-unstable
+$ weepin remove foo bar baz*
+$ weepin remove nvim-*
+```
+
+## `weepin clear`
+
+Removes all pins from [the manifest](#the-manifest-file).
+
+> [!IMPORTANT]
+> This action modifies the generated `weepin/` sources.
+
+## `weepin version`
+
+Lists the weepin version, loader version and lock version, in a format:
+- `<weepin version>+<loader version>.<lock version>` (valid semver), e.g `0.1.1+2.3`
+
+# The [manifest](#manifest) file
+
+The format is [JSON5](https://json5.org/).
 
 All of the values in each category evaluate to the same.
 If they are marked as `DIRTY` that means they're a [dirty pin](./functional.md#dirty-pin)
@@ -652,14 +755,14 @@ See [Specific services URIs](./functional.md#specific-services-uris) for details
 ```json5
 {
   // Full form:
-  name: {
+  fooga: {
     // Define the template
     template: "https://example.com/foo-<ver>.tar.gz",
     // And simply list the values
     ver: "0.1.0",
   },
 
-  "<name>": { // You can use the template tag in the name
+  "name": {
     template: "https://example.com/<name>-<ver>.tar.gz",
     name: "foo",
     ver: "0.1.0",
@@ -683,7 +786,110 @@ See [Specific services URIs](./functional.md#specific-services-uris) for details
 >  
 > This is to allow changes to the structure and files inside for future versions.
 
-For technical details regarding this directory see [the technical spec](./technical.md).
+## Structure
+
+This is the structure generated for the user **after** doing `import ./weepin {}`.
+
+These are the abstract kinds and their guaranteed attributes after importing.  
+Note that these don't reflect and are not reflect by the `RI`s and they don't reflect the contents of the internal lock file or `weepin.json5`.
+
+`A(B)` means that `A` inherits attributes from `B`.
+
+- `Resource`:
+  - `kind`: `"pinned"|"template"|"channel"|"git"|"github"|"gitlab"` - Kind of the resource
+
+- `Pinned(Resource)`:
+  - `url`: `string` - Fully resolvable (no templates) url of the resource
+  - `hash`: `string` - Hash of the resource
+  - `outPath` - The result of evaluating a fetcher for the given source
+
+- `Template(Pinned)`:
+  - `extra.template`: `string` - Template for `url`, see [`Template`](#templateri)
+  - `extra.attrs`: `table<string, string>` - Used template tags and their values
+
+- `Channel(Template)`:
+  - `extra.attrs.name`: `string` - Specific channel name.
+  - `extra.attrs.release`: `string` - Specific release. Used for repinning later.
+      This is not e.g., `nixos-unstable`, but `nixos-24.11pre641786.d603719ec6e2`.
+
+- `Git(Template)`:
+  - `extra.attrs.owner`: `string` - Owner name
+  - `extra.attrs.name`: `string` - Repository name
+  - `extra.attrs.commit`: `string` - Specific commit
+  - `extra.attrs.branch`: `string` - Specific branch
+  - `extra.attrs.tag`: `string|null` - Set if `extra.repo.commit` belongs to a tag
+
+- `Gitlab(Git)`:
+  - `extra.attrs.group`: `string|null` - Optional group name
+
+An example with all of the kinds above (`hash` and `outPath` omitted for brevity):
+
+```nix
+{
+  resource = { # Pinned
+    kind = "pinned";
+    url = "https://example.com/resource-0.1.0.tar.gz";
+  };
+  resource2 = { # Template with one attr
+    kind = "template";
+    url = "https://example.com/resource-0.1.0.tar.gz";
+    extra = {
+      template = "https://example.com/resource-<version>.1.0.tar.gz";
+      attrs.version = "0.1.0";
+    };
+  };
+  fooga = { # Template with several attributes
+    kind = "template";
+    url = "https://example.com/fooga-0.1.0.tar.gz";
+    extra = {
+      template = "https://example.com/<name>-<version>.1.0.tar.gz";
+      attrs = {
+        name = "fooga";
+        version = "0.1.0";
+      };
+    };
+  };
+  nixos-unstable = { # A channel
+    kind = "channel";
+    url = "https://releases.nixos.org/nixos/unstable/nixos-24.11pre641786.d603719ec6e2/nixexprs.tar.xz";
+    extra = {
+      template = "https://releases.nixos.org/nixos/unstable/<release>/nixexprs.tar.xz";
+      attrs = {
+        release = "nixos-24.11pre641786.d603719ec6e2";
+      };
+    };
+  };
+  "lua-utils.nvim" = { # A git package
+    kind = "git";
+    url = "https://api.github.com/repos/nvim-neorg/lua-utils.nvim/tarball/v1.0.2";
+    extra = {
+      template = "https://api.github.com/repos/<owner>/<name>/tarball/<tag>";
+      attrs = {
+        owner = "nvim-neorg";
+        name = "lua-utils.nvim";
+        commit = "e565749421f4bbb5d2e85e37c3cef9d56553d8bd";
+        branch = "main";
+        tag = "v1.0.2";
+      };
+    };
+  };
+  "iswap.nvim" = { # A git package
+    kind = "git";
+    url = "https://github.com/mizlan/iswap.nvim/archive/e02cc91f2a8feb5c5a595767d208c54b6e3258ec.tar.gz";
+    extra = {
+      template = "https://github.com/<owner>/<name>/archive/<commit>.tar.gz";
+      attrs = {
+        owner = "mizlan";
+        name = "iswap.nvim";
+        commit = "e565749421f4bbb5d2e85e37c3cef9d56553d8bd";
+        branch = "master";
+        tag = null;
+      };
+    };
+  };
+  # Gitlab would be similar as above but with `group` as well and other `url`
+}
+```
 
 ## Properties
 
@@ -708,7 +914,7 @@ TODO: Fill this
 
 - The CLI interface described above 
 - Stable interface for the result of importing `weepin/`
-- `weepin.json5` with a structure described in [The `weepin.json5` file](#the-weepinjson5-file)
+- [The manifest file](#the-manifest-file)
 
 # Non-goals for this release
 
@@ -738,19 +944,32 @@ TODO: Fill this
 
 # Not sure if I'll ever implement these
 
+- `weepin issue` - Something I always wanted to fiddle with - posting issues inside the executable,
+  how would that work?
+
+  Since the executable *already* runs on the computer and has access to all the context it would simply gather it
+  and make an issue on the weepin repository for the user.
+
+  This command would ask if it should include certain fields, as some info may be confidential.
+
+  The executable would also allow to post as user (some config on user end, e.g., the `gh` binary would be required)
+  or anonymously (via a github bot).
+
 - Rolling back, enforcing tracking by git?
 
-- Caching of downloaded `weepin add`? `./.cache` or `./weeping/cache`?
+- Dirty template resources? (see [Known issues and questons](#known-issues-and-questions), `1.`)
 
-- Homepage, description, such? Like what niv has
+- Caching of downloaded `weepin add`? `./.cache` or `./weepin/cache`?
 
 - Homepage, description, such? Like what niv has
 
 # Non-goals for **any** release
 
-- Config for `import ./weepin {}`, but in `weepin.json5`.  
-  I want `weepin.json5` to be the declarative source of truh for resources,  
+- Config for `import ./weepin {}`, but in [the manifest](#the-manifest-file).
+  I want the manifest to be the declarative source of truh for resources,  
   and the `weepin/` directory to be the only source of truth for pinned packages with the machinery inside  
-  and `import ./weeping { ... }` to be the only way to configure certain aspects of importing.
+  and `import ./weepin { ... }` to be the only way to configure certain aspects of importing.
 
-# Known issues
+# Known issues and questions
+
+1. Is it even possible to query an http[s] resource for available files?
