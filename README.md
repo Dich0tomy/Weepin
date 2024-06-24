@@ -20,7 +20,7 @@ TODO:
   Go back to my message on ghostty discord and list these in functional.md
 
 - [ ] Create hjson2nix
-- [ ] Add CONTRIBUTING.md with my conventions
+- [ ] Add CONTRIBUTING.md with my conventions (for example not using pragma once)
 - [ ] Impl that shit:
   - [ ] ?
 - [ ] Create a lua lib/module/stuff?

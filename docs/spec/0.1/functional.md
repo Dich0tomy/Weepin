@@ -52,7 +52,7 @@
   * [Channel resources](#channel-resources)
   * [Git resources](#git-resources)
     * [GitHub](#github)
-    * [GitLab:](#gitlab)
+    * [GitLab](#gitlab)
     * [SourceHut](#sourcehut)
     * [generic Git](#generic-git)
   * [Templated resources](#templated-resources)
@@ -178,7 +178,7 @@ pinned = import ./weepin {};
 
 ## Manifest
 
-Refers to the declarative file for listing resources - `weepin.json5`.
+Refers to the declarative file for listing resources - `weepin.hjson`.
 
 ## Pin
 
@@ -196,12 +196,10 @@ The syntax that is a 100% valid [manifest](#the-manifest-file) syntax, can be pa
 Note, that the syntax of the file has to be a 100% conformant with the underlying manifest format, it's just that
 weepin enforces a certain structure of the file of form:
 
-```json5
-{
-  name: ...,
-  name: ...,
-  name: ...,
-}
+```hjson
+name: ...
+name: ...
+name: ...
 ```
 
 But most of the resource kinds provide dirty versions which allow for quick prototyping.  
@@ -220,48 +218,65 @@ Only git, channel and template resources can be dirty.
 
 ### Dirty channel resources
 
-```json5
-{
-  nixpkgs: "", // DIRTY, not pinned
-}
+```hjson
+nixpkgs: '' # DIRTY, not pinned
 ```
 
 ### Dirty git resources
 
-```json5
-{
-  // DIRTY, because there's no version
-  repo: "owner/repo",
+This lists all valid dirty git resource syntaxes:
+```hjson
+# name: GitRI - DIRTY, because there's no version
+repo: owner/repo
 
-  // DIRTY, because it doesn't have the proper final syntax, but this is allowed for fast prototyping
-  "owner/repo2": "0.1.0", // for git resources the rhs can be a tag, a commit or a branch
-  "gitlab:owner/repo3": "0.1.0",
-  "gitlab:group/owner/repo4": "0.1.0",
-  "git:gitea.fooga.com/owner/repo5": "0.1.0",
-  "git:98.0.12.8/owner/repo6": "0.1.0",
+# GitRI: '' - DIRTY, because there's no version & it's not a proper final syntax
+owner/repo: ''
 
-  // The above get expanded to
-  repo2: "owner/repo5/0.1.0",
-  repo3: "gitlab:owner/repo2/0.1.0",
-  repo4: "gitlab:group/owner/repo2/0.1.0",
-  repo5: "git:gitea.fooga.com/owner/repo3/0.1.0"
-  repo6: "git:98.0.12.8/owner/repo3/0.1.0"
+# GitRI: '',- DIRTY, because it's not a proper final syntax
+owner/repo/0.1.0: ''
 
-  // DIRTY, because there's no version & it's not a proper final syntax
-  "owner/repo6": "",
-}
+# DIRTY, because it doesn't have the proper final syntax
+owner/repo: 0.1.0 # for git resources the rhs can be a tag, a commit or a branch
+gitlab#owner/repo/0.1.0: ''
+gitlab#group/owner/repo: 0.1.0
+git#gitea.fooga.com/owner/repo/0.1.0: ''
+git#98.0.12.8/owner/repo: 0.1.0
+
+# The above get expanded to
+repo: owner/repo/0.1.0
+repo: gitlab#owner/repo/0.1.0
+repo: gitlab#group/owner/repo/0.1.0
+repo: git#gitea.fooga.com/owner/repo/0.1.0
+repo: git#98.0.12.8/owner/repo/0.1.0
 ```
 
 ### Dirty template resources
 
-```json5
-{
-  name2: { // DIRTY, not expanded template
-    template: "https://example.com/foo-<ver>.tar.gz",
-  },
-
-  name: "https://example.com/foo-<ver>.tar.gz",// DIRTY, not expanded template
+This lists all valid dirty template resource syntaxes:
+```hjson
+name: { # DIRTY, not expanded template
+  template: 'https://example.com/foo-<ver>.tar.gz'
 }
+
+# DIRTY, not expanded template
+name: 'https://example.com/foo-<ver>.tar.gz'
+
+# DIRTY, not final syntax
+'https://example.com/foo-<ver>.tar.gz': ''
+# We have to quote here because it contains `:` in the URL
+
+# The above get expanded to
+name2: {
+  template: 'https://example.com/foo-<ver>.tar.gz'
+  ver: 0.1.0
+},
+
+# DIRTY, not expanded template
+name: 'https://example.com/foo-<ver>.tar.gz'
+
+# DIRTY, not final syntax
+'https://example.com/foo-<ver>.tar.gz': ''
+# We have to quote here because it contains `:` in the URL
 ```
 
 ## Template tag
@@ -364,22 +379,25 @@ Internally they are turned into `TemplateRI`s of specific services URLs with `<o
 `GitRI`s have several forms:
 - GitHub:
   - `owner/repo`
-  - `gh:owner/repo`
-  - `github:owner/repo`
+  - `gh#owner/repo`
+  - `github#owner/repo`
 - GitLab:
-  - `gl:[group/]owner/repo`
-  - `gitlab:[group/]owner/repo`
-  - `gitlab:32.92.0.15[/group]/owner/repo`
-  - `gitlab.example.com[/group]/owner/repo` (note the `.` here, it's `gitlab.example.com`, not `gitlab:example.com` nor `gitlab:gitlab.example.com`)
+  - `gl#[group/]owner/repo`
+  - `gitlab#[group/]owner/repo`
+  - `gitlab#32.92.0.15[/group]/owner/repo`
+  - `gitlab.example.com[/group]/owner/repo` (note the `.` here, it's `gitlab.example.com`, not `gitlab#example.com` nor `gitlab#gitlab.example.com`)
 - SourceHut -
-  - `srht:owner/repo`
-  - `sourcehut:owner/repo`
+  - `srht#owner/repo`
+  - `sourcehut#owner/repo`
 - generic git source -
-  - `git:example.com[group/]/owner/repo`
-  - `git:127.0.0.1[group/]/owner/repo`
+  - `git#example.com[group/]/owner/repo`
+  - `git#127.0.0.1[group/]/owner/repo`
 
 > [!NOTE]
 > These are not *necesarilly* reflected in the internal lockfile or manifest.
+
+Also see:
+  - [Resolvable template tags and RIs](#resolvable-template-tags-and-ris).
 
 ### `TemplateRI`
 Contains [template tags](#template-tag).  
@@ -388,6 +406,9 @@ Template tags get expanded from attributes passed on the commandline or from the
 Some examples:
 - `http://example.com/archive/<version>.zip`
 - `http://example.com/archive/<name>-<version>.zip`
+
+Also see:
+  - [Resolvable template tags and RIs](#resolvable-template-tags-and-ris).
 
 ### Resolvable template tags and RIs
 A normal template tag only defines the template name - `<name>`,
@@ -403,8 +424,8 @@ A `TemplateRI` can be resolvable if all its tags are resolvable, e.g.:
 
 A `GitRI` can be resolvable if it's suffixed with `/init`, e.g.:
 - `owner/repo/0.1.0` github with tag
-- `gitlab:owner/repo/dev` gitlab with branch
-- `git:codeberg.com/Codeberg/org/975ee655a3f19fc0554f2a3186d86c5f4a1abe7c` a resolvable `GitRI` for generic git source with an attached commit
+- `gitlab#owner/repo/dev` gitlab with branch
+- `git#codeberg.com/Codeberg/org/975ee655a3f19fc0554f2a3186d86c5f4a1abe7c` a resolvable `GitRI` for generic git source with an attached commit
 
 Resolvable RIs are provided for convenience when `weepin init`ing or `weepin add`ing, instead of:
 ```shell
@@ -478,7 +499,7 @@ if you want to init with e.g. `nixos-unstable` do `weepin init nixos-unstable`.
 
 Same as `weepin add` + the `-d` option:
 ```shell
-$ weepin init owner/repo=0.1.0 owner/repo2=0.1.1
+$ weepin init owner/repo=0.1.0 owner/repo=0.1.1
 $ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
 ```
 
@@ -501,7 +522,7 @@ Adds a specific resource to [the manifest](#the-manifest-file).
 For git RIs it adds the newest available tag or commit by default,
 unless `-r, --replace` is passed (it accepts commits, tags and branches).
 
-Since `GitRI`s are implicit `TemplateRI`s `-r` works, you can think of it as `--revision` if that helps ;).
+Since `GitRI`s are implicit `TemplateRI`s `-r` works, you can think of it as `--revision` if that helps ; ).
 
 It can be also launched with the `-i, --interactive` flag to pick the revision.
 
@@ -512,13 +533,13 @@ It can be also launched with the `-i, --interactive` flag to pick the revision.
 
 ### Examples
 
-```shell
+```
 $ weepin add owner/repo/0.1.0
-$ weepin add owner/repo/0.1.0 -n myrepo owner/repo2 -d myrepo
+$ weepin add owner/repo/0.1.0 -n myrepo owner/repo -d myrepo
 $ weepin add owner/repo/0.1.0 -Vn myrepo https://example.com/<ver>.com -t 0.1.1 -n resource
 $ weepin add gitlab.company.com/group/owner/repo/f0784ec
-$ weepin add git:gitea.foo.com/owner/repo -r develop
-$ weepin add git:gitea.foo.com/owner/repo -i # Will try to determine available revisions
+$ weepin add git#gitea.foo.com/owner/repo -r develop
+$ weepin add git#gitea.foo.com/owner/repo -i # Will try to determine available revisions
 $ weepin add https://example.com/fooga-<ver>.tar.xz -t 0.1.1 # We can omit the name because there's only one `ver`, name will be inferred from `fooga-<ver>.tar.xz` to be `fooga`
 $ weepin add https://example.com/<ver>.tar.xz -t 0.1.1 # Name will be inferred from second level domain to be `example`
 $ weepin add https://example.com/<name>/<ver>.tar.xz -t ver=0.1.1 -tname=foo
@@ -539,7 +560,7 @@ with pinned dependencies.
 
 Same as `weepin add` + the `-d` option
 ```shell
-$ weepin init owner/repo=0.1.0 owner/repo2=0.1.1
+$ weepin init owner/repo=0.1.0 owner/repo=0.1.1
 $ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
 ```
 
@@ -614,19 +635,25 @@ Lists the weepin version, loader version and lock version, in a format:
 
 # The [manifest](#manifest) file
 
-The format is [JSON5](https://json5.org/).
+The format is [HJSON](https://hjson.github.io/).
+
+The format is dead simple:
+```
+name: val
+...
+```
+The name and value only need quoting (via `'` or `"`) if they contain `:` or start with a number.
+The comments are `//` and `#`.
+Accepts optional root levle braces.
+Accepts semicolons at the end of each field.
 
 All of the values in each category evaluate to the same.
 If they are marked as `DIRTY` that means they're a [dirty pin](./functional.md#dirty-pin)
 and will need to be expanded by [`weepin pin-dirty`](#wee-pin-dirty-options-options).
 
 The general [final syntax](./technical.md#final-syntax) is
-```
-{
-  name: ...,
-  name: ...,
-  name: ...,
-}
+```hjson
+name: ...
 ```
 
 The syntax of the file is **specifically** optimized for `GitRI`s are these
@@ -635,80 +662,86 @@ are the most commonly pinned resources.
 ## Pinned resources
 
 Doesn't have dirty versions.
-```json5
-{
-  example: "https://example.com/archive/0.1.2.zip",
-  "foo-cf8c": "https://some-git-service.user.com/cf8c87fafe/archive/foo.tar.gz",
-}
+
+The valid syntax is
+```hjson
+name: <fully resolvable URL>
+```
+e.g.:
+```hjson
+example: 'https://example.com/archive/0.1.2.zip'
+foo-cf8c: 'https://some-git-service.user.com/cf8c87fafe/archive/foo.tar.gz'
 ```
 
 ## Channel resources
 
-```json5
-{
-  nixpkgs: "", // DIRTY, not pinned
+For dirty versions see - [Dirty channel resources](#dirty-channel-resources).
 
-  nixos-unstable: "nixos-unstable",
-  nixos-stable: "nixos-23.11",
-}
+The valid syntax is
+```hjson
+name: <channel name>
+```
+e.g.
+```hjson
+nixos-unstable: nixos-unstable
+nixos-stable: nixos-23.11
 ```
 
+Valid channel names are all the folder names under [`https://channels.nixos.org`](https://channels.nixos.org),  
+e.g. `nixos-unstable`, `nixpkgs-unstable`, `nixos-24.11`, `nixos-24.05`, `nixpkgs-24.05-darwin`.
+
 ## Git resources
+
+For dirty versions see - [Dirty git resources](#dirty-git-resources).
 
 ### GitHub
 
 `gh` and `github` here can be used interchangeably like in GitHub `GitRI`.  
 See [Specific services URIs](./functional.md#specific-services-uris) for details.
 
-```json5
-{
-  // Full form:
-  repo: {
-    service: "github",
-    owner: "owner", // Owner is set here, repo name is pin name
-    rev: "0.1.0", // Tag, commit or branch
-  },
-  repo: { // If service is omitted it's `github` by default
-    owner: "owner",
-    rev: "0.1.0",
-  },
-  repo: "owner/repo/0.1.0",
-  repo: "owner/repo", // DIRTY, no revision
-  "gh:owner/repo": "0.1.0", // DIRTY, not final
-  "owner/repo": "", // DIRTY, no revision & not final
+```hjson
+# Full form:
+repo: {
+  service: github
+  owner: owner # Owner is set here, repo name is pin name
+  rev: 0.1.0 # Tag, commit or branch
 }
+
+repo: { # If service is omitted it's `github` by default
+  owner: owner
+  rev: 0.1.0
+}
+
+repo: owner/repo/0.1.0
 ```
 
-### GitLab:
+### GitLab
 
 `gl` and `gitlab` here can be used interchangeably like in GitLab `GitRI`.  
 See [Specific services URIs](./functional.md#specific-services-uris) for details.
 
-```json5
-{
-  // Full form:
-  repo: {
-    service: "gitlab",
-    group: "group", // Not everyone is in a group so this can be omitted
-    owner: "owner",  // Owner is set here, repo name is pin name
-    rev: "0.1.0", // Tag, commit or branch
-  },
-  repo: {
-    service: "gitlab.own.com",
-    owner: "owner",
-    rev: "0.1.0",
-  },
-  repo: {
-    service: "gitlab:127.0.0.1",
-    owner: "owner",
-    rev: "0.1.0",
-  },
-  repo: "gl:owner/repo/0.1.0",
-
-  repo: "gl:owner/repo", // DIRTY, no revision
-  "gl:owner/repo": "0.1.0", // DIRTY, not final
-  "gl:owner/repo": "", // DIRTY, no revision & not final
+```hjson
+# Full form:
+repo: {
+  service: gitlab
+  group: group # Not everyone is in a group so this can be omitted
+  owner: owner  # Owner is set here, repo name is pin name
+  rev: 0.1.0 # Tag, commit or branch
 }
+
+repo: {
+  service: gitlab.own.com
+  owner: owner
+  rev: 0.1.0
+}
+
+repo: {
+  service: gitlab#127.0.0.1
+  owner: owner
+  rev: 0.1.0
+}
+
+repo: gl:owner/repo/0.1.0
 ```
 
 ### SourceHut
@@ -716,64 +749,48 @@ See [Specific services URIs](./functional.md#specific-services-uris) for details
 `srht` and `sourcehut` here can be used interchangeably like in SourceHut `GitRI`.  
 See [Specific services URIs](./functional.md#specific-services-uris) for details.
 
-```json5
-{
-  // Full form:
-  repo: {
-    service: "srht",
-    owner: "owner",  // Owner is set here, repo name is pin name
-    rev: "0.1.0", // Tag, commit or branch
-  },
-  repo: "srht:owner/repo/0.1.0",
-
-  repo: "srht:owner/repo", // DIRTY, no revision
-  "srht:owner/repo": "0.1.0", // DIRTY, not final
-  "srht:owner/repo": "", // DIRTY, no revision & not final
+```hjson
+# Full form:
+repo: {
+  service: srht
+  owner: owner  # Owner is set here, repo name is pin name
+  rev: 0.1.0 # Tag, commit or branch
 }
+
+repo: srht#owner/repo/0.1.0
 ```
 
 ### generic Git
 
-```json5
-{
-  // Full form:
-  repo: {
-    service: "git:example.com",
-    owner: "owner",  // Owner is set here, repo name is pin name
-    rev: "0.1.0", // Tag, commit or branch
-  },
-  repo: "git:52.98.12.111/owner/repo/0.1.0",
-  repo: "git:52.98.12.111/owner/repo", // DIRTY, no revision
-
-  "git:gitea.me.com/owner/repo": "0.1.0", // DIRTY, not final
-  "git:codeberg.womp.womp/owner/repo": "", // DIRTY, no version & not final
+```hjson
+# Full form:
+repo: {
+  service: git#example.com
+  owner: owner # Owner is set here, repo name is pin name
+  rev: 0.1.0 # Tag, commit or branch
 }
+
+repo: git#52.98.12.111/owner/repo/0.1.0
 ```
 
 ## Templated resources
 
-```json5
-{
-  // Full form:
-  fooga: {
-    // Define the template
-    template: "https://example.com/foo-<ver>.tar.gz",
-    // And simply list the values
-    ver: "0.1.0",
-  },
+For dirty versions see - [Dirty channel resources](#dirty-channel-resources).
 
-  "name": {
-    template: "https://example.com/<name>-<ver>.tar.gz",
-    name: "foo",
-    ver: "0.1.0",
-  },
+```hjson
+# Full form:
+fooga: {
+  # Define the template
+  template: "https://example.com/foo-<ver>.tar.gz",
+  # And simply list the values
+  ver: "0.1.0",
+},
 
-  name2: { // DIRTY, not expanded template
-    template: "https://example.com/foo-<ver>.tar.gz",
-  },
-
-  name: "https://example.com/foo-<ver>.tar.gz", // DIRTY, not expanded template
-}
+name: {
+  template: "https://example.com/<name>-<ver>.tar.gz",
+  name: "foo",
+  ver: "0.1.0",
+},
 ```
 
 # The `weepin/` directory
@@ -791,7 +808,7 @@ See [Specific services URIs](./functional.md#specific-services-uris) for details
 This is the structure generated for the user **after** doing `import ./weepin {}`.
 
 These are the abstract kinds and their guaranteed attributes after importing.  
-Note that these don't reflect and are not reflect by the `RI`s and they don't reflect the contents of the internal lock file or `weepin.json5`.
+Note that these don't reflect and are not reflect by the `RI`s and they don't reflect the contents of the internal lock file or `weepin.hjson`.
 
 `A(B)` means that `A` inherits attributes from `B`.
 
