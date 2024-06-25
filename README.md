@@ -6,6 +6,10 @@
 
 A robust declarative (hjson)/interactive (weepin add) nix pinning system akin to niv/npins.
 
+> [!IMPORTANT]
+> No code is written yet.
+> Look at [functional spec](./docs/spec/0.1/functional.md)
+
 TODO:
 - [x] Finish [functional spec](./docs/spec/0.1/functional.md) and [technical spec](./docs/spec/0.1/technical.md) first draft
 - [x] Consider `weepin issue`
