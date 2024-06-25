@@ -3,7 +3,7 @@
 <!-- vim-markdown-toc GFM -->
 
 * [Technical spec of weepin](#technical-spec-of-weepin)
-* [The `weepin/` directory](#the-weepin-directory)
+* [The weepin store](#the-weepin-store)
   * [`default.nix`](#defaultnix)
   * [`sources.lock`](#sourceslock)
 
@@ -33,7 +33,9 @@
   - `optional` - TartanLLama's optional library
   - `expected` - TartanLLama's optional library
 
-# The `weepin/` directory
+# The weepin store
+
+See - [The weepin store](./functional.md#the-weepin-store)
 
 It contains the following files:
 
