@@ -88,7 +88,16 @@ Sample resources include nix channels, sources for plugins, assets and such.
 
 ## Why not use flake inputs?
 
-Flakes allow to pin non-nix resources with `flake = false`, but this isn't very idiomatic and has a couple problems.  
+First and foremost - flakes haven't been stabilized yet and not everyone (yes, really!) uses them and the experimental nix commands.
+One can say that we already have nix channels accessible via the `<name>` syntax.
+
+Yes, we do - but they're not reproducible, as they depend on the fact that such a channel with a given name
+must exist on the host system, and there are no guarantees about what exactly the channel is pinned to.
+
+Such users benefit greatly for pinning tools like niv, npins or weepin!
+
+And as for users that do use flakes - flakesallow to pin non-nix resources with `flake = false`,
+but this isn't very idiomatic and has a couple problems.
 I've talked with lots of people who strongly believe Nix inputs should only be used for Nix sources.  
 
 - Flakes haven't been finalized yet as well, so pinning such resources with `inputs` can be not future proof.
