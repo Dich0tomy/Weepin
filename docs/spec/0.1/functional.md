@@ -1,3 +1,5 @@
+# Table of Contents
+
 <!-- vim-markdown-toc GFM -->
 
 * [Functional spec of weepin](#functional-spec-of-weepin)

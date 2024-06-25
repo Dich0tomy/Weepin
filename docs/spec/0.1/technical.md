@@ -1,3 +1,5 @@
+# Table of Contents
+
 <!-- vim-markdown-toc GFM -->
 
 * [Technical spec of weepin](#technical-spec-of-weepin)
