@@ -64,7 +64,7 @@
     * [generic Git](#generic-git)
   * [Templated resources](#templated-resources)
 * [The weepin store](#the-weepin-store)
-  * [Structure](#structure)
+  * [Generated structure](#generated-structure)
   * [Properties](#properties)
 * [Features for this release](#features-for-this-release)
 * [Non-goals for this release](#non-goals-for-this-release)
@@ -84,39 +84,41 @@
 
 # What is Weepin
 
-Weepin is an application for pinning nix sources interactively and declaratively.
+Weepin is an application for pinning nix resources interactively and declaratively.
 
-I wasn't 100% happy with both npins and niv so I made this.
+I wasn't 100% happy with both `npins` and `niv` so I made this.
 
 If  you're not familar with the tools above - they are used to pin resources, not necesarilly Nix ones.  
 Sample resources include nix channels, sources for plugins, assets and such.
 
 ## Why not use flake inputs?
 
-First and foremost - flakes haven't been stabilized yet and not everyone (yes, really!) uses them and the experimental nix commands.
-One can say that we already have nix channels accessible via the `<name>` syntax.
+First and foremost - flakes haven't been stabilized yet, not everyone (yes, really!) uses them and the experimental nix commands.
 
+You may argue that we already have nix channels accessible via the `<name>` syntax.
 Yes, we do - but they're not reproducible, as they depend on the fact that such a channel with a given name
 must exist on the host system, and there are no guarantees about what exactly the channel is pinned to.
 
-Such users benefit greatly for pinning tools like niv, npins or weepin!
+Such users benefit greatly from pinning tools like `niv`, `npins` or `weepin`!
 
-And as for users that do use flakes - flakesallow to pin non-nix resources with `flake = false`,
+As for users that do use flakes - flakes allow to pin non-nix resources with `flake = false`,
 but this isn't very idiomatic and has a couple problems.
 I've talked with lots of people who strongly believe Nix inputs should only be used for Nix sources.  
 
 - Flakes haven't been finalized yet as well, so pinning such resources with `inputs` can be not future proof.
 - Nix has to query the pinned resources each time to make sure they are in sync (which can also cause rate limits!).
-- Each flake that uses the flake with resources in inputs also inherits those inputs (recursively if `inputs.name.flake` isn't `false`!)
+- Each flake that uses the flake with resources in inputs also inherits those inputs (recursively if `inputs.name.flake` isn't `false`!).
+  e.g. if you have a flake for your neovim config and pin plugins with inputs, and then use that flake in your system config,
+  your system config will inherit all those plugins.
 
 ## Main objectives
 
-- [x] Be optimized for git and channel resources as these are the most commonly pinned resources
-- [x] Have a manifest file
-- [x] Have a simple and easily prototypable manifest syntax
-- [x] Have a simple CLI interface
-- [x] Be future proof
-- [x] Make it hard to do things wrong
+- [x] Be optimized for git and channel resources as these are the most commonly pinned ones - [Resource Identifiers](#resource-identifiers)
+- [x] Have a manifest file - [The manifest file](#the-manifest-file)
+- [x] Have a simple and easily prototypable manifest syntax - [The manifest file](#the-manifest-file)
+- [x] Have a simple CLI interface - [CLI interface](#cli-interface)
+- [x] Be future proof <!-- TODO: Make section -->
+- [x] Make it hard to do things wrong <!-- TODO: Make section -->
 
 ## Common use cases
 
@@ -133,7 +135,7 @@ $ weepin init
 ...
 $ tree
 .
-├── default.nix # Pass in -f to create a flake.nix instead
+├── default.nix # Pass in (-f/-f parts) to create a flake.nix instead
 ├── weepin.hjson
 └── weepin
     ├── sources.json
@@ -157,7 +159,7 @@ This works very well for GitHub repositories. Run this command to add jq to your
 $ weepin add stedolan/jq
 ```
 
-For more examples see [`weepin add`](#weepin-add)
+For more examples see [`weepin add`](#weepin-add).
 
 ### Using custom URLs
 
@@ -168,15 +170,15 @@ Run this command to add the Haskell compiler GHC to your [weepin store](#the-wee
 $ weepin add 'https://downloads.haskell.org/~ghc/<version>/ghc-<version>-i386-deb8-linux.tar.xz' -r 8.4.3
 ```
 
-The option -r sets the `version` tag to `8.4.3` (`-r` is for `--replace`, since there's only one tag we don't have to pass in the name).
-Unlike niv, weepin automatically recognizes the above as a template tag, so we don't have to pass in `-t`.
+The option `-r` sets the `version` tag to `8.4.3` (`-r` is for `--replace`, since there's only one tag we don't have to pass in the name).
+Unlike `niv`, weepin automatically recognizes the above as a template tag, so we don't have to pass in `-t`.
 
 The type of the dependency is guessed from the provided URL template, if -T is not specified.
 
 For updating the version of GHC used run this command:
 
 ```
-$ niv repin ghc -r 8.6.2
+$ weepin repin ghc -r 8.6.2
 ```
 
 ## Differences between npins and niv
@@ -187,7 +189,7 @@ TBD.
 ### Prototyping speed
 
 Weepin is made specifically for speed, you can dirtily list your resources in a file and then run a command to actually pin them.
-Neither niv nor npins have that feature.
+Neither `niv` nor `npins` have that feature.
 
 ### Optimized for git and channels
 
@@ -206,10 +208,10 @@ Channel names are simply.. channel names - `weepin add nixos-unstable`, `weepin 
   npins add github --branch branch --at commit foo bar
   ```
 
-  - In niv
+  - In `niv`
 
 
-- Definitely more future proof than niv and npins (for the end user), the interface is clearly defined for the user
+- Definitely more future proof than `niv` and `npins` (for the end user), the interface is clearly defined for the user
     and the implementation part is easily extendable without breaking the interface.
 
 ## General info
@@ -220,7 +222,7 @@ Channel names are simply.. channel names - `weepin add nixos-unstable`, `weepin 
 
 The source of truth for pins is the [weepin store](#the-weepin-store).
 
-Sources can either be added with `weepin add ...`, while `weepin init`ing or added to the file directly.
+Sources can either be added with `weepin add ...`, while `weepin init`ing or added to the file directly.  
 [`weepin add`](#weepin-add) and [`weepin init`](#weepin-init) automatically regenerate [the weepin store](#the-weepin-store),
 but after changing the file you have to [`weepin pin-dirty`](#weepin-pindirty).
 
@@ -886,7 +888,7 @@ Refers to the `weepin/` directory which is the source of truth for pinned packag
 >  
 > This is to allow changes to the structure and files inside for future versions.
 
-## Structure
+## Generated structure
 
 This is the structure generated for the user **after** doing `import ./weepin {}`.
 
@@ -1012,7 +1014,7 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
 
 - Importing
 
-  This release won't support importing sources from niv/npins or `flake.lock`.
+  This release won't support importing sources from `niv`/`npins` or `flake.lock`.
 
 - `weepin upgrade`
 
@@ -1047,7 +1049,7 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
 
 - Caching of downloaded `weepin add`? `./.cache` or `./weepin/cache`?
 
-- Homepage, description, such? Like what niv has
+- Homepage, description, such? Like what `niv` has
 
 # Non-goals for **any** release
 

@@ -17,6 +17,11 @@ TODO:
 - [x] Refine the name inference spec
 - [x] Decide between hjson and nix, make a draft, ask people
 - [x] Add a definition for the `weepin/` folder
+- [ ] Redesign syntax. `:` *can* be used for resolvables and it would **already** constitute a pinned version!
+- [ ] Get rid of resolvable template tags, they are added complexity for no reason at all, and not very practical
+- [ ] Add magic template tags, that is
+  `weepin add 'https://downloads.haskell.org/~ghc/8.4.3/ghc-8.4.3-i386-deb8-linux.tar.xz' -t version 8.4.3`
+  should automatically make it a tag with `<version>`
 - [ ] List differences and similarities between niv and npins (in terms of interface as well!!!)
   Go back to my message on ghostty discord and list these in functional.md
 
