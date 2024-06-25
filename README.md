@@ -16,6 +16,7 @@ TODO:
 - [x] Talk with nobbz about why he strongly believes inputs for nix only
 - [x] Refine the name inference spec
 - [x] Decide between hjson and nix, make a draft, ask people
+- [x] Add a definition for the `weepin/` folder
 - [ ] List differences and similarities between niv and npins (in terms of interface as well!!!)
   Go back to my message on ghostty discord and list these in functional.md
 

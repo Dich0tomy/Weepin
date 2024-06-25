@@ -47,4 +47,4 @@ Sadly, there isn't `builtins.importHJSON`, but I bundle an HJSON parser (see the
 
 ## 4. Rewrite it in *
 
-No.
+No. Well.. maybe someday, but for now it stays in C++.

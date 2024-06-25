@@ -16,7 +16,6 @@
 * [Sample usage](#sample-usage)
 * [Conventions](#conventions)
 * [Definitions](#definitions)
-  * [Manifest](#manifest)
   * [Consumer](#consumer)
   * [Pin](#pin)
   * [Weepin loader](#weepin-loader)
@@ -62,7 +61,7 @@
     * [SourceHut](#sourcehut)
     * [generic Git](#generic-git)
   * [Templated resources](#templated-resources)
-* [The `weepin/` directory](#the-weepin-directory)
+* [The weepin store](#the-weepin-store)
   * [Structure](#structure)
   * [Properties](#properties)
 * [Features for this release](#features-for-this-release)
@@ -160,9 +159,8 @@ For more examples see [`weepin add`](#weepin-add)
 
 ### Using custom URLs
 
-<!-- TODO: Change the name of `weepin/` directory to something sensible -->
 It is possible to use weepin to fetch packages from custom URLs.
-Run this command to add the Haskell compiler GHC to your `weepin/` directory.
+Run this command to add the Haskell compiler GHC to your [weepin store](#the-weepin-store).
 
 ```shell
 $ weepin add 'https://downloads.haskell.org/~ghc/<version>/ghc-<version>-i386-deb8-linux.tar.xz' -r 8.4.3
@@ -218,15 +216,15 @@ Channel names are simply.. channel names - `weepin add nixos-unstable`, `weepin 
 - The main entrypoint of weepin is [the manifest](#the-manifest-file) which contains weepin sources.  
   They *can* but *don't have to* contain version information at this point (see [Dirty pin](#dirty-pin)).  
 
-The source of truth for pins is the `weepin/` directory.
+The source of truth for pins is the [weepin store](#the-weepin-store).
 
 Sources can either be added with `weepin add ...`, while `weepin init`ing or added to the file directly.
-[`weepin add`](#weepin-add) and [`weepin init`](#weepin-init) automatically regenerate [the `weepin/` directory](#the-weepin-directory),
+[`weepin add`](#weepin-add) and [`weepin init`](#weepin-init) automatically regenerate [the weepin store](#the-weepin-store),
 but after changing the file you have to [`weepin pin-dirty`](#weepin-pindirty).
 
 Certain operations will automatically warn if dirty pins will be detected.
 
-Weepin will generate a `weepin/` directory which is to be imported - see [The `weepin/` directory](#the-weepin-directory) for more details.  
+Weepin will generate a `weepin/` directory which is to be imported - see [The weepin store](#the-weepin-store) for more details.  
 
 ```nix
 pinned = import ./weepin {};
@@ -254,13 +252,9 @@ pinned = import ./weepin {};
 
 # Definitions
 
-## Manifest
-
-Refers to the declarative file for listing resources - `weepin.hjson`.
-
 ## Consumer
 
-The consumer is the nix file which imports [The `weepin/` directory](#the-weepin-directory),
+The consumer is the nix file which imports [The weepin store](#the-weepin-store),
 either `flake.nix` or `*.nix`.
 
 ## Pin
@@ -571,7 +565,7 @@ Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
 
-Initializes `weepin/` and [the manifest](#the-manifest-file).
+Initializes [the weepin store](#the-weepin-store) and [the manifest](#the-manifest-file).
 Subsequent invocations will overwrite these.
 
 Unlike `npins` and `niv` doesn't track anything by default,  
@@ -716,7 +710,9 @@ Removes all pins from [the manifest](#the-manifest-file).
 Lists the weepin version, loader version and lock version, in a format:
 - `<weepin version>+<loader version>.<lock version>` (valid semver), e.g `0.1.1+2.3`
 
-# The [manifest](#manifest) file
+# The manifest file
+
+Refers to the declarative file for listing resources - `weepin.hjson`.
 
 The format is [HJSON](https://hjson.github.io/).
 
@@ -876,7 +872,9 @@ name: {
 },
 ```
 
-# The `weepin/` directory
+# The weepin store
+
+Refers to the `weepin/` directory which is the source of truth for pinned packages.
 
 > [!IMPORTANT]
 > The **only two** guarantees about this directory are:  
