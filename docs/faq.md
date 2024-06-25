@@ -27,6 +27,7 @@ running some magic command which would pin with the latest versions.
 When I was designing the syntax I considered the following configuration formats:
 - Dhall - too verbose, unfamiliar, not enough adoption, doesn't meet my needs
 - Nickel - too verbose, unfamiliar, not enough adoption, doesn't meet my needs
+- Yaml - *cough*
 - HCL - too verbose, unfamiliar, not enough adoption, doesn't meet my needs
 - Pkl - unfamiliar, not enough adoption
 - TOML - doesn't meet my needs
