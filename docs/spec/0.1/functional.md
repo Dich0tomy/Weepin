@@ -4,7 +4,12 @@
 * [What is Weepin](#what-is-weepin)
   * [Why not use flake inputs?](#why-not-use-flake-inputs)
   * [Main objectives](#main-objectives)
-  * [Differences between niv and npins](#differences-between-niv-and-npins)
+  * [Common use cases](#common-use-cases)
+    * [Bootstrapping a Nix project](#bootstrapping-a-nix-project)
+    * [Tracking a nixpkgs branch](#tracking-a-nixpkgs-branch)
+    * [Importing packages from GitHub](#importing-packages-from-github)
+    * [Using custom URLs](#using-custom-urls)
+  * [Differences between npins and niv](#differences-between-npins-and-niv)
     * [Prototyping speed](#prototyping-speed)
     * [Optimized for git and channels](#optimized-for-git-and-channels)
   * [General info](#general-info)
@@ -12,6 +17,7 @@
 * [Conventions](#conventions)
 * [Definitions](#definitions)
   * [Manifest](#manifest)
+  * [Consumer](#consumer)
   * [Pin](#pin)
   * [Weepin loader](#weepin-loader)
   * [Final syntax](#final-syntax)
@@ -59,8 +65,6 @@
 * [The `weepin/` directory](#the-weepin-directory)
   * [Structure](#structure)
   * [Properties](#properties)
-* [Common use cases](#common-use-cases)
-* [Differences between npins and niv](#differences-between-npins-and-niv)
 * [Features for this release](#features-for-this-release)
 * [Non-goals for this release](#non-goals-for-this-release)
 * [Goals for the **next** release](#goals-for-the-next-release)
@@ -113,7 +117,72 @@ I've talked with lots of people who strongly believe Nix inputs should only be u
 - [x] Be future proof
 - [x] Make it hard to do things wrong
 
-## Differences between niv and npins
+## Common use cases
+
+<!-- TODO: Use this for differences between npins and niv -->
+
+This section lists the same things as [niv's common use cases](https://github.com/nmattia/niv?tab=readme-ov-file#getting-started):
+
+### Bootstrapping a Nix project
+
+<!-- TODO: Weepin should also probably generate a default.nix by default-->
+
+```shell
+$ weepin init
+...
+$ tree
+.
+├── default.nix # Pass in -f to create a flake.nix instead
+├── weepin.hjson
+└── weepin
+    ├── sources.json
+    └── sources.nix
+
+1 directory, 4 files
+```
+
+### Tracking a nixpkgs branch
+
+<!-- TODO: Thing about channels more - allowing tracking by git and such -->
+<!-- TODO: Is that true? Should I be tracking something? -->
+Weepin doesn't add anything by default, if you want to track a channel:
+
+### Importing packages from GitHub
+
+The add command will infer information about the package being added, when possible.
+This works very well for GitHub repositories. Run this command to add jq to your project:
+
+```
+$ weepin add stedolan/jq
+```
+
+For more examples see [`weepin add`](#weepin-add)
+
+### Using custom URLs
+
+<!-- TODO: Change the name of `weepin/` directory to something sensible -->
+It is possible to use weepin to fetch packages from custom URLs.
+Run this command to add the Haskell compiler GHC to your `weepin/` directory.
+
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/<version>/ghc-<version>-i386-deb8-linux.tar.xz' -r 8.4.3
+```
+
+The option -r sets the `version` tag to `8.4.3` (`-r` is for `--replace`, since there's only one tag we don't have to pass in the name).
+Unlike niv, weepin automatically recognizes the above as a template tag, so we don't have to pass in `-t`.
+
+The type of the dependency is guessed from the provided URL template, if -T is not specified.
+
+For updating the version of GHC used run this command:
+
+```
+$ niv repin ghc -r 8.6.2
+```
+
+## Differences between npins and niv
+
+TBD.
+<!-- TODO -->
 
 ### Prototyping speed
 
@@ -188,6 +257,11 @@ pinned = import ./weepin {};
 ## Manifest
 
 Refers to the declarative file for listing resources - `weepin.hjson`.
+
+## Consumer
+
+The consumer is the nix file which imports [The `weepin/` directory](#the-weepin-directory),
+either `flake.nix` or `*.nix`.
 
 ## Pin
 
@@ -487,7 +561,9 @@ Subcommands:
 Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-n, --name <name>` Gives the pin a custom name.
 
-- `-V, --no-validate` Disable validating if the given resource is reachable on the network before adding.
+- `-f, --flake [bare | parts]`
+    - Without argument or with `bare` generates a bare flake,
+    - With `parts` generates a flake with flake parts
 
 - `-i, --interactive` Invalid for `ResolvableRI`s.
   Weepin will try to determine available versions for a given resource and prompt to pick.
@@ -518,8 +594,6 @@ $ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pi
 Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-n, --name <name>` Gives the pin a custom name.
 
-- `-V, --no-validate` Disable validating if the given resource is reachable on the network before adding.
-
 - `-i, --interactive` Invalid for `ResolvableRI`s.
   Weepin will try to determine available versions for a given resource and prompt to pick.
 
@@ -545,7 +619,7 @@ It can be also launched with the `-i, --interactive` flag to pick the revision.
 ```
 $ weepin add owner/repo/0.1.0
 $ weepin add owner/repo/0.1.0 -n myrepo owner/repo -d myrepo
-$ weepin add owner/repo/0.1.0 -Vn myrepo https://example.com/<ver>.com -t 0.1.1 -n resource
+$ weepin add owner/repo/0.1.0 -n myrepo https://example.com/<ver>.com -t 0.1.1 -n resource
 $ weepin add gitlab.company.com/group/owner/repo/f0784ec
 $ weepin add git#gitea.foo.com/owner/repo -r develop
 $ weepin add git#gitea.foo.com/owner/repo -i # Will try to determine available revisions
@@ -921,20 +995,6 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
 
 - Each pin has an `outPath` generated by its respective fetcher, which means it can be used as `src` for derivations
 - Each pin's name is unchanged
-
-# Common use cases
-
-TODO: Fill this
-<!-- TODO: Fill this -->
-
-# Differences between npins and niv
-
-- Allows for declarative specifying of dependencies, instead of 100% interactive via the CLI
-- Allows for dirtily specifying dependencies, that is - not pinning them immediately, and then using
-  the cli to automagically pin them
-- TODO: Fill this
-
-<!-- TODO: Fill this -->
 
 # Features for this release
 
