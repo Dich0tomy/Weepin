@@ -33,11 +33,11 @@
     * [`GitRI` inference](#gitri-inference)
   * [Resource Identifiers](#resource-identifiers)
     * [`PinnedRI`](#pinnedri)
+    * [`TemplateRI`](#templateri)
     * [`ChannelRI`](#channelri)
     * [`GitRI`](#gitri)
       * [Specific services RIs](#specific-services-ris)
-    * [`TemplateRI`](#templateri)
-    * [Resolvable template tags and RIs](#resolvable-template-tags-and-ris)
+    * [Resolvable RIs](#resolvable-ris)
 * [Cli interface](#cli-interface)
   * [`weepin`](#weepin)
   * [`weepin init`](#weepin-init)
@@ -64,7 +64,7 @@
     * [generic Git](#generic-git)
   * [Templated resources](#templated-resources)
 * [The weepin store](#the-weepin-store)
-  * [Generated structure](#generated-structure)
+  * [The generated structure](#the-generated-structure)
   * [Properties](#properties)
 * [Goals for *some* future release](#goals-for-some-future-release)
 * [Goals for this release](#goals-for-this-release)
@@ -253,6 +253,8 @@ pinned = import ./weepin {};
 
 - `(foo | bar)` foo or bar, exclusive
 
+- `foo?` optional `foo`, `foo|null`
+
 # Definitions
 
 ## Consumer
@@ -341,32 +343,20 @@ name: { # DIRTY, not expanded template
 # DIRTY, not expanded template
 name: 'https://example.com/foo-<ver>.tar.gz'
 
-# DIRTY, not final syntax
-'https://example.com/foo-<ver>.tar.gz': ''
-# We have to quote here because it contains `:` in the URL
-
-# The above get expanded to
-name2: {
+# The above get expanded to the same form, e.g.
+name: {
   template: 'https://example.com/foo-<ver>.tar.gz'
   ver: 0.1.0
 },
-
-# DIRTY, not expanded template
-name: 'https://example.com/foo-<ver>.tar.gz'
-
-# DIRTY, not final syntax
-'https://example.com/foo-<ver>.tar.gz': ''
-# We have to quote here because it contains `:` in the URL
 ```
 
 ## Template tag
 
-A template tag a special substring of form `<name>` or `<name:init>` which is later expanded with a specific value.
-
-The latter is a special type of a template tag called a `resolvable template tag`.  
-See [Resolvable template tags and RIs](#resolvable-template-tags-and-ris) below for more information on that.
+A template tag a special substring of form `<name>` which is later expanded with a specific value.
 
 The name `tag` and `template tag` is used interchangeably.
+
+Tags are reflected as `attrs` in [The generated structure](#the-generated-structure).
 
 ## Name inference
 
@@ -439,14 +429,27 @@ e.g. `https://example.com/archive/0.1.2.zip`
 These can't be `weepin repin`ed, because no information about version substitution is available.  
 If you want to have that possibility, create a `TemplateRI` instead, e.g. `https://example.com/archive/<version>.zip`
 
+### `TemplateRI`
+Contains [template tag](#template-tag)s.  
+Template tags get expanded from attributes passed on the commandline or interactively if `-i, --interactive` is chosen.
+
+Some examples:
+- `http://example.com/archive/<version>.zip`
+- `http://example.com/archive/<name>-<version>.zip`
+
+
 ### `ChannelRI`
-`ChannelRI`s match the `^\w*?-\d{2}\.\d{2}(?:\w*?)?$` regex and resolve to nixos channel exprs:
-\[\<release> is determined at runtime]
-- `nixos-23.11` -> `https://releases.nixos.org/nixos/23.11/<release>/nixexprs.tar.xz` 
+`ChannelRI`s match the `^\w*?-\d{2}\.\d{2}(?:\w*?)?$` regex and resolve to nixos channel exprs.
+
+Internally they are turned into `TemplateRI`s of specific channels URLs with `<release>` tags.
+
+- `nixos-23.11` -> `https://releases.nixos.org/nixos/23.11/<release>/nixexprs.tar.xz`
 - `nixos-unstable` -> `https://releases.nixos.org/nixos/unstable/<release>/nixexprs.tar.xz`
 - `nixos-24.05-darwin` -> `https://releases.nixos.org/nixos/24.05-darwin/<release>/nixexprs.tar.xz`
 - `nixpkgs-23.05` -> `https://releases.nixos.org/nixpkgs/23.05/<release>/nixexprs.tar.xz`
 - etc.
+
+The `release` attribute is later expressed in [The generated structure](#the-generated-structure) as well.
 
 ### `GitRI`
 Pins to a git resource like github, gitlab, sourcehut or a generic one.
@@ -473,66 +476,44 @@ Internally they are turned into `TemplateRI`s of specific services URLs with `<o
   - `git#example.com[group/]/owner/repo`
   - `git#127.0.0.1[group/]/owner/repo`
 
+The `group`, `owner`, `repo` attributes are later expressed in the [Generated structure](#generated-structure) as well. The structure also defines `commit`, `branch` and `tag`.
+
 > [!NOTE]
 > These are not *necesarilly* reflected in the internal lockfile or manifest.
 
 Also see:
-  - [Resolvable template tags and RIs](#resolvable-template-tags-and-ris).
+  - [Resolvable RIs](#resolvable-ris).
 
-### `TemplateRI`
-Contains [template tags](#template-tag).  
-Template tags get expanded from attributes passed on the commandline or from their init values if they're [resolvable](#resolvable-template-tags-and-ris).
+### Resolvable RIs
+For now only `GitRI` can be resolvable.
 
-Some examples:
-- `http://example.com/archive/<version>.zip`
-- `http://example.com/archive/<name>-<version>.zip`
+A `GitRI` can be resolvable if it's suffixed with `:init`, e.g.:
+- `owner/repo:0.1.0` github with tag
+- `gitlab#owner/repo:dev` gitlab with branch
+- `git#codeberg.com/Codeberg/org:975ee655a3f19fc0554f2a3186d86c5f4a1abe7c` a resolvable `GitRI` for generic git source with an attached commit.
 
-Also see:
-  - [Resolvable template tags and RIs](#resolvable-template-tags-and-ris).
-
-### Resolvable template tags and RIs
-A normal template tag only defines the template name - `<name>`,
-but it can also optionally define a value its initialized with - `<name:init>`,
-such a tag is called a **resolvable template tag**.
-
-`ResolvableRI`s are RIs that contain all the information to resolve them and be pinned.  
-`ChannelRI`s and `PinnedRI`s are already `ResolvableRI`s.
-
-A `TemplateRI` can be resolvable if all its tags are resolvable, e.g.:
-- `https://example.com/archive/foo-<ver:0.1.0>`.
-- `https://example.com/archive/<name:foo>-<ver:0.1.0>`.
-
-A `GitRI` can be resolvable if it's suffixed with `/init`, e.g.:
-- `owner/repo/0.1.0` github with tag
-- `gitlab#owner/repo/dev` gitlab with branch
-- `git#codeberg.com/Codeberg/org/975ee655a3f19fc0554f2a3186d86c5f4a1abe7c` a resolvable `GitRI` for generic git source with an attached commit
+The syntax is chosen very carefully.
+If you read [Dirty git resources](#dirty-git-resources) section, you can notice,
+that resolvable RIs are basically the equivalent of a dirty (because of not final syntax) git resource!
 
 Resolvable RIs are provided for convenience when `weepin init`ing or `weepin add`ing, instead of:
 ```shell
 $ weepin init
-$ weepin add owner/repo -r 0.1.0
-$ weepin add repo/baz -r dev
+$ weepin add owner/repo -r 0.1.0 repo/baz -r dev
 ```
 
 It can become
 
 ```shell
 $ weepin init
-$ weepin add owner/repo/0.1.0 repo/baz/dev
+$ weepin add owner/repo:0.1.0 gitrepo/baz:dev
 ```
 
 Or even
 
 ```shell
-$ weepin init owner/repo/0.1.0 repo/baz/dev
+$ weepin init owner/repo:0.1.0 repo/baz:dev
 ```
-
-> [!IMPORTANT]
-> `ResolvableRI`s are not `PinnedRI`s!  
-> `PinnedRI`s are a special kind of RIs that are permanently pinned and cannot be upgraded  
-> A resolvable `GitRI` or `TemplateRI` is still of its own kind, but it just uses different syntax  
-> upon `weepin add`ing and `weepin init`ing which gives it an initial value.
-
 
 # Cli interface
 
@@ -565,7 +546,7 @@ Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-i, --interactive` Invalid for `ResolvableRI`s.
   Weepin will try to determine available versions for a given resource and prompt to pick.
 
-- `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
+- `-r, --replace [<name>:]<val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
 
 Initializes [the weepin store](#the-weepin-store) and [the manifest](#the-manifest-file).
@@ -574,15 +555,15 @@ Subsequent invocations will overwrite these.
 Unlike `npins` and `niv` doesn't track anything by default,  
 if you want to init with e.g. `nixos-unstable` do `weepin init nixos-unstable`.
 
-> [!IMPORTANT]
+> [!IMPORTANT ]
 > This action creates the `weepin/` sources.
 
 ### Examples
 
-Same as `weepin add` + the `-d` option:
+Same as `weepin add` + the `-f` option.
 ```shell
-$ weepin init owner/repo=0.1.0 owner/repo=0.1.1
-$ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
+$ weepin init owner/repo:0.1.0 owner/repo:0.1.1
+$ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec
 ```
 
 ## `weepin add`
@@ -594,7 +575,7 @@ Positional, after each `WeepinRI` / `ResolvableRI`:
 - `-i, --interactive` Invalid for `ResolvableRI`s.
   Weepin will try to determine available versions for a given resource and prompt to pick.
 
-- `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
+- `-r, --replace [<name>] <val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
 
 Adds a specific resource to [the manifest](#the-manifest-file).
@@ -622,7 +603,7 @@ $ weepin add git#gitea.foo.com/owner/repo -r develop
 $ weepin add git#gitea.foo.com/owner/repo -i # Will try to determine available revisions
 $ weepin add https://example.com/fooga-<ver>.tar.xz -t 0.1.1 # We can omit the name because there's only one `ver`, name will be inferred from `fooga-<ver>.tar.xz` to be `fooga`
 $ weepin add https://example.com/<ver>.tar.xz -t 0.1.1 # Name will be inferred from second level domain to be `example`
-$ weepin add https://example.com/<name>/<ver>.tar.xz -t ver=0.1.1 -tname=foo
+$ weepin add https://example.com/<name>/<ver>.tar.xz -t ver 0.1.1 -tname foo
 ```
 
 ## `weepin pin-dirty`
@@ -640,7 +621,7 @@ with pinned dependencies.
 
 Same as `weepin add` + the `-d` option
 ```shell
-$ weepin init owner/repo=0.1.0 owner/repo=0.1.1
+$ weepin init owner/repo:0.1.0 owner/repo:0.1.1
 $ weepin init https://gitlab.company.com/group/owner/repo/<ver> -t f0784ec -d pins
 ```
 
@@ -667,7 +648,7 @@ $ weepin show neovim nvim-luapad neogit
   `[<name> [POSITIONAL ARGUMENTS]]...`
 
 Positional arguments:
-- `-r, --replace [<name>=]<val>` Invalid for `ResolvableRI`s.
+- `-r, --replace [<name>] <val>` Invalid for `ResolvableRI`s.
   Substitutes given tag `<name>` with `<val>`. `name` is optional if there's only one template tag in the `TemplateRI`.
 
 > [!IMPORTANT]
@@ -887,7 +868,7 @@ Refers to the `weepin/` directory which is the source of truth for pinned packag
 >  
 > This is to allow changes to the structure and files inside for future versions.
 
-## Generated structure
+## The generated structure
 
 This is the structure generated for the user **after** doing `import ./weepin {}`.
 
@@ -918,10 +899,10 @@ Note that these don't reflect and are not reflect by the `RI`s and they don't re
   - `extra.attrs.name`: `string` - Repository name
   - `extra.attrs.commit`: `string` - Specific commit
   - `extra.attrs.branch`: `string` - Specific branch
-  - `extra.attrs.tag`: `string|null` - Set if `extra.repo.commit` belongs to a tag
+  - `extra.attrs.tag`: `string?` - Set if `extra.repo.commit` belongs to a tag
 
 - `Gitlab(Git)`:
-  - `extra.attrs.group`: `string|null` - Optional group name
+  - `extra.attrs.group`: `string?` - Optional group name
 
 An example with all of the kinds above (`hash` and `outPath` omitted for brevity):
 
