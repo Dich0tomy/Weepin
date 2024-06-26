@@ -41,8 +41,10 @@
 * [Cli interface](#cli-interface)
   * [`weepin`](#weepin)
   * [`weepin init`](#weepin-init)
+    * [Magic tagging](#magic-tagging)
     * [Examples](#examples)
   * [`weepin add`](#weepin-add)
+    * [Magic tagging](#magic-tagging-1)
     * [Examples](#examples-1)
   * [`weepin pin-dirty`](#weepin-pin-dirty)
     * [Examples](#examples-2)
@@ -168,6 +170,12 @@ Run this command to add the Haskell compiler GHC to your [weepin store](#the-wee
 ```shell
 $ weepin add 'https://downloads.haskell.org/~ghc/<version>/ghc-<version>-i386-deb8-linux.tar.xz' -r 8.4.3
 ```
+or
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/8.4.3/ghc-8.4.3-i386-deb8-linux.tar.xz' -r version 8.4.3
+```
+The above is called [magic tagging](#magic-tagging) - a special case for `weepin add` and `weepin init`.  
+When you give a `PinnedRI` with the `r` option and a full tag name and value, it tries to match the value and make it a `TemplateRi`.
 
 The option `-r` sets the `version` tag to `8.4.3` (`-r` is for `--replace`, since there's only one tag we don't have to pass in the name).
 Unlike `niv`, weepin automatically recognizes the above as a template tag, so we don't have to pass in `-t`.
@@ -555,6 +563,26 @@ Subsequent invocations will overwrite these.
 Unlike `npins` and `niv` doesn't track anything by default,  
 if you want to init with e.g. `nixos-unstable` do `weepin init nixos-unstable`.
 
+### Magic tagging
+
+When you pass a `PinnedRI` and `-r, --replace` with a name and a value, weepin tries to match the value and make it a `TemplateRi`, e.g.:
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/8.4.3/ghc-8.4.3-i386-deb8-linux.tar.xz' -r version 8.4.3
+```
+Will actually behave as if:
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/<version>/ghc-<version>-i386-deb8-linux.tar.xz' -r version 8.4.3
+```
+
+Same for:
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/8.4.3/ghc-8.4.3-i386-deb8-linux.tar.xz' -r version 8.4.3 -r name ghc
+```
+-
+```shell
+$ weepin add 'https://downloads.haskell.org/~<name>/<version>/<name>-<version>-i386-deb8-linux.tar.xz' -r version 8.4.3 -r name ghc
+```
+
 > [!IMPORTANT ]
 > This action creates the `weepin/` sources.
 
@@ -580,14 +608,33 @@ Positional, after each `WeepinRI` / `ResolvableRI`:
 
 Adds a specific resource to [the manifest](#the-manifest-file).
 
-For git RIs it adds the newest available tag or commit by default,
-unless `-r, --replace` is passed (it accepts commits, tags and branches).
+For git RIs it adds the newest available tag or commit by default, unless `-r, --replace` is passed (it accepts commits, tags and branches).
 
 Since `GitRI`s are implicit `TemplateRI`s `-r` works, you can think of it as `--revision` if that helps ; ).
 
 It can be also launched with the `-i, --interactive` flag to pick the revision.
 
 `-i` will fail for `ChannelRI`s, `PinnedRI`s and `TemplateRI`s.
+
+### Magic tagging
+
+When you pass a `PinnedRI` and `-r, --replace` with a name and a value, weepin tries to match the value and make it a `TemplateRi`, e.g.:
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/8.4.3/ghc-8.4.3-i386-deb8-linux.tar.xz' -r version 8.4.3
+```
+Will actually behave as if:
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/<version>/ghc-<version>-i386-deb8-linux.tar.xz' -r version 8.4.3
+```
+
+Same for:
+```shell
+$ weepin add 'https://downloads.haskell.org/~ghc/8.4.3/ghc-8.4.3-i386-deb8-linux.tar.xz' -r version 8.4.3 -r name ghc
+```
+-
+```shell
+$ weepin add 'https://downloads.haskell.org/~<name>/<version>/<name>-<version>-i386-deb8-linux.tar.xz' -r version 8.4.3 -r name ghc
+```
 
 > [!IMPORTANT]
 > This action creates the `weepin/` sources.
