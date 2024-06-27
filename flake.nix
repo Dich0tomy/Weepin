@@ -16,6 +16,7 @@
       perSystem = {...}: {
         imports = [
           ./nix/shell
+          ./nix/bundled-libs
         ];
       };
     };

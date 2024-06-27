@@ -1,0 +1,7 @@
+prefix=@out@
+includedir=${prefix}/include
+
+Name: expected
+Description: TartanLlama's expected
+Version: @version@
+Cflags: -I${includedir}/
