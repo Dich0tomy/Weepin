@@ -1066,8 +1066,11 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
 
 # Not sure if I'll ever implement these
 
-- `weepin issue` - Something I always wanted to fiddle with - posting issues inside the executable,
-  how would that work?
+- git channels - add a banal option of tracking channels from github instead of actual channels,  
+  e.g. `git#nixos-unstable`?
+
+- `weepin issue` - Something I always wanted to fiddle with - posting issues inside the executable.  
+  How would that work?
 
   Since the executable *already* runs on the computer and has access to all the context it would simply gather it
   and make an issue on the weepin repository for the user.
