@@ -13,9 +13,7 @@
         ./nix/treefmt.nix
       ];
 
-      perSystem = {pkgs, ...}: {
-        formatter = pkgs.alejandra;
-
+      perSystem = {...}: {
         imports = [
           ./nix/shell
         ];
