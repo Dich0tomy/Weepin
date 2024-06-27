@@ -44,6 +44,8 @@ When I was designing the syntax I considered the following configuration formats
 
 - HJSON - basically JSON5, **but** better, because it's simpler and has a little bit more relaxed syntax!
 
+Big props to [@hqnna](https://github.com/hqnna) for telling me about this project!
+
 Sadly, there isn't `builtins.importHJSON`, but I bundle an HJSON parser (see the [hjson2nix project](#)). <!-- LINK ONE DAY -->
 
 ## 4. Rewrite it in *

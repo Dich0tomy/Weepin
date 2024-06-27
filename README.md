@@ -26,10 +26,9 @@ TODO:
 - [x] Add magic template tags, that is
   `weepin add 'https://downloads.haskell.org/~ghc/8.4.3/ghc-8.4.3-i386-deb8-linux.tar.xz' -t version 8.4.3`
   should automatically make it a tag with `<version>`
-- [ ] List differences and similarities between niv and npins (in terms of interface as well!!!)
-  Go back to my message on ghostty discord and list these in functional.md
-
 - [ ] Create hjson2nix
+- [ ] (During impl) List differences and similarities between niv and npins (in terms of interface as well!!!)
+Go back to my message on ghostty discord and list these in functional.md
 - [ ] Add CONTRIBUTING.md with my conventions (for example not using pragma once)
 - [ ] Impl that shit:
   - [ ] ?
