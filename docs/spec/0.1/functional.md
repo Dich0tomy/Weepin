@@ -1066,6 +1066,8 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
 
 # Not sure if I'll ever implement these
 
+- Allow to only have interactive pins? No manifest file?
+
 - git channels - add a banal option of tracking channels from github instead of actual channels,  
   e.g. `git#nixos-unstable`?
 
