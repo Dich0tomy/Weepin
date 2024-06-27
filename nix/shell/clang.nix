@@ -8,29 +8,36 @@
   meson,
   ninja,
   pkg-config,
-  mold,
   cmake,
   spdlog,
   fmt,
+  just,
+  magic-enum,
   ...
 }:
 mkShell.override {stdenv = lowPrio llvmPackages_18.stdenv;} {
+	hardeningDisable = ["all"];
+
   packages =
     [
+    	# treefmt
       config.treefmt.build.wrapper
+
+      # essential build tools
       meson
       cmake
       ninja
       pkg-config
+      just
 
       # libs
       spdlog
       fmt
+			magic-enum
     ]
     ++ builtins.attrValues config.legacyPackages;
 
   env = {
-    CXX_LD = lib.getExe mold;
     CLANGD_PATH = lib.getExe' clang-tools_18 "clangd";
     ASAN_SYMBOLIZER_PATH = lib.getExe' llvmPackages_18.bintools-unwrapped "llvm-symbolizer";
   };

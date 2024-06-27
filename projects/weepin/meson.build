@@ -1,21 +1,12 @@
 sources = files(
-  'src/main.cpp'
+  'src/weepin/main.cpp'
 )
 
-include_directories = include_directories(
-  'src'
-)
-
-local_deps = [
-  dependency('fmt')
-  dependency('optional')
-  dependency('expected')
-  dependency('magic-enum')
-]
+include_directories = include_directories('src')
 
 executable(
   'weepin',
   sources,
   include_directories: include_directories,
-  dependencies: [ _dire_test_internal, local_deps ]
+  dependencies: [ weepin_core ]
 )
