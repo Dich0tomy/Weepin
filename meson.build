@@ -8,8 +8,8 @@ project(
   meson_version : '>= 0.63.0',
   license: 'EUPL-1.1',
 
-  default_options: [
-    'cpp_std=c++20'
+  default_options:  [
+    'cpp_std=c++23'
   ]
 )
 
