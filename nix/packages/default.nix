@@ -2,10 +2,12 @@
   perSystem = {
     pkgs,
     config,
+    lib,
     ...
   }: {
     packages = let
-      weepin = pkgs.callPackage ./weepin {inherit self config;};
+      callPackage = lib.callPackageWith (pkgs // config.legacyPackages);
+      weepin = callPackage ./weepin {inherit self;};
     in {
       weepin-gcc14 = weepin.override {stdenv = pkgs.gcc14Stdenv;};
       weepin-clang18 = weepin.override {stdenv = pkgs.lowPrio pkgs.llvmPackages_18.stdenv;};

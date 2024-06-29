@@ -1,7 +1,6 @@
 {
   stdenv,
   self,
-  config,
   lib,
   meson,
   ninja,
@@ -11,6 +10,10 @@
   fmt,
   just,
   magic-enum,
+  tl-optional,
+  tl-expected,
+  libassert,
+  cpptrace,
 }: let
   version = lib.fileContents "${self}/VERSION";
 in
@@ -28,13 +31,15 @@ in
 
     src = self;
 
-    buildInputs =
-      [
-        magic-enum
-        spdlog
-        fmt
-      ]
-      ++ builtins.attrValues config.legacyPackages; # Bundled libs
+    buildInputs = [
+      magic-enum
+      spdlog
+      fmt
+      tl-optional
+      tl-expected
+      libassert
+      cpptrace
+    ];
 
     nativeBuildInputs = [
       meson
