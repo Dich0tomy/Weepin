@@ -19,7 +19,7 @@
 !VERSION
 !Justfile
 !meson.build
-!meson_options.build
+!meson_options.txt
 
 # Project dirs
 !nix/
