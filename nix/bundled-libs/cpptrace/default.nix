@@ -6,7 +6,6 @@
   zlib,
   zstd,
   fetchFromGitHub,
-  writeText,
 }:
 stdenv.mkDerivation (self: {
   pname = "cpptrace";
@@ -42,17 +41,13 @@ stdenv.mkDerivation (self: {
 
   propagatedBuildInputs = [] ++ lib.optional self.static libdwarf;
 
-  postInstall = let
-    cpptrace-pc-content = builtins.readFile ./cpptrace.pc;
-    cpptrace-pc =
-      writeText
-      "cpptrace.pc"
-      (
-        if self.static
-        then (builtins.replaceStrings ["-lcpptrace"] ["-lcpptrace -ldwarf"] cpptrace-pc-content)
-        else cpptrace-pc-content
-      );
-  in ''
-    install -Dm 644 ${cpptrace-pc} $out/lib/pkgconfig/cpptrace.pc
+  preConfigure = ''
+    mkdir -p $out/lib/pkgconfig
+
+    substitute \
+    	${./cpptrace.pc} \
+    	$out/lib/pkgconfig/cpptrace.pc \
+    	--subst-var out \
+    	--subst-var version
   '';
 })

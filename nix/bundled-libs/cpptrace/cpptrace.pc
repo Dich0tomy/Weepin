@@ -5,5 +5,5 @@ libdir=${prefix}/lib
 Name: cpptrace
 Description: cpptrace
 Version: @version@
-Libs: -L${libdir}/ -lcpptrace
+Libs: -L${libdir}/ -ldwarf -lcpptrace
 Cflags: -I${includedir}/
