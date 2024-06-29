@@ -1,45 +1,46 @@
 {
-	stdenv,
-	self,
-	config,
-	lib,
-	meson,
-	ninja,
-	pkg-config,
-	cmake,
-	spdlog,
-	fmt,
-	just,
-	magic-enum,
-}:
-let
-	version = lib.fileContents "${self}/VERSION";
+  stdenv,
+  self,
+  config,
+  lib,
+  meson,
+  ninja,
+  pkg-config,
+  cmake,
+  spdlog,
+  fmt,
+  just,
+  magic-enum,
+}: let
+  version = lib.fileContents "${self}/VERSION";
 in
-stdenv.mkDerivation (this: {
-	pname = "weepin";
-	version = "${version}+nix";
+  stdenv.mkDerivation (_this: {
+    pname = "weepin";
+    version = "${version}+nix";
 
-	strictDeps = true;
-	enableParallelBuilding = true;
+    strictDeps = true;
+    enableParallelBuilding = true;
 
-	dontUseCmakeConfigure = true;
+    dontUseCmakeConfigure = true;
 
-	# TODO: Proper meson configure and shi
-	mesonBuildType = "debug";
+    # TODO: Proper meson configure and shi
+    mesonBuildType = "debug";
 
-	src = self;
+    src = self;
 
-	buildInputs = [
-		magic-enum
-		spdlog
-		fmt
-	] ++ builtins.attrValues config.legacyPackages; # Bundled libs
+    buildInputs =
+      [
+        magic-enum
+        spdlog
+        fmt
+      ]
+      ++ builtins.attrValues config.legacyPackages; # Bundled libs
 
-	nativeBuildInputs = [
-		meson
-		cmake
-		ninja
-		pkg-config
-		just
-	];
-})
+    nativeBuildInputs = [
+      meson
+      cmake
+      ninja
+      pkg-config
+      just
+    ];
+  })

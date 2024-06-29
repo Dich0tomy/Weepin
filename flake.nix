@@ -11,7 +11,7 @@
 
       imports = [
         ./nix/treefmt.nix
-				./nix/packages
+        ./nix/packages
       ];
 
       perSystem = {...}: {
