@@ -12,6 +12,8 @@ local_deps = [
   dependency('optional'),
   dependency('expected'),
   dependency('magic_enum'),
+  dependency('libassert'),
+  dependency('cpptrace'),
 ]
 
 public_include_dirs = include_directories('include')

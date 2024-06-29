@@ -1,0 +1,9 @@
+prefix=@out@
+includedir=${prefix}/include
+libdir=${prefix}/lib
+
+Name: cpptrace
+Description: cpptrace
+Version: @version@
+Libs: -L${libdir}/ -lcpptrace
+Cflags: -I${includedir}/

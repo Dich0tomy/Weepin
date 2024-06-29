@@ -1,0 +1,9 @@
+prefix=@out@
+includedir=${prefix}/include
+libdir=${prefix}/lib
+
+Name: libassert
+Description: libassert
+Version: @version@
+Libs: -L${libdir}/ -lassert
+Cflags: -I${includedir}/
