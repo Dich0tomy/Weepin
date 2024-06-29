@@ -484,7 +484,7 @@ Internally they are turned into `TemplateRI`s of specific services URLs with `<o
   - `git#example.com[group/]/owner/repo`
   - `git#127.0.0.1[group/]/owner/repo`
 
-The `group`, `owner`, `repo` attributes are later expressed in the [Generated structure](#generated-structure) as well. The structure also defines `commit`, `branch` and `tag`.
+The `group`, `owner`, `repo` attributes are later expressed in [The generated structure](#the-generated-structure) as well. The structure also defines `commit`, `branch` and `tag`.
 
 > [!NOTE]
 > These are not *necesarilly* reflected in the internal lockfile or manifest.
@@ -933,23 +933,21 @@ Note that these don't reflect and are not reflect by the `RI`s and they don't re
   - `outPath` - The result of evaluating a fetcher for the given source
 
 - `Template(Pinned)`:
-  - `extra.template`: `string` - Template for `url`, see [`Template`](#templateri)
-  - `extra.attrs`: `table<string, string>` - Used template tags and their values
+  - `template`: `string` - Template for `url`, see [`Template`](#templateri)
+  - `attrs`: `table<string, string>` - Used template tags and their values
 
 - `Channel(Template)`:
-  - `extra.attrs.name`: `string` - Specific channel name.
-  - `extra.attrs.release`: `string` - Specific release. Used for repinning later.
+  - `attrs.name`: `string` - Specific channel name.
+  - `attrs.release`: `string` - Specific release. Used for repinning later.
       This is not e.g., `nixos-unstable`, but `nixos-24.11pre641786.d603719ec6e2`.
 
 - `Git(Template)`:
-  - `extra.attrs.owner`: `string` - Owner name
-  - `extra.attrs.name`: `string` - Repository name
-  - `extra.attrs.commit`: `string` - Specific commit
-  - `extra.attrs.branch`: `string` - Specific branch
-  - `extra.attrs.tag`: `string?` - Set if `extra.repo.commit` belongs to a tag
-
-- `Gitlab(Git)`:
-  - `extra.attrs.group`: `string?` - Optional group name
+  - `attrs.group`: `string?` - Optional group name
+  - `attrs.owner`: `string` - Owner name
+  - `attrs.name`: `string` - Repository name
+  - `attrs.commit`: `string` - Specific commit
+  - `attrs.branch`: `string` - Specific branch
+  - `attrs.tag`: `string?` - Set if `extra.repo.commit` belongs to a tag
 
 An example with all of the kinds above (`hash` and `outPath` omitted for brevity):
 
@@ -962,58 +960,49 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
   resource2 = { # Template with one attr
     kind = "template";
     url = "https://example.com/resource-0.1.0.tar.gz";
-    extra = {
-      template = "https://example.com/resource-<version>.1.0.tar.gz";
-      attrs.version = "0.1.0";
-    };
+    template = "https://example.com/resource-<version>.1.0.tar.gz";
+    attrs.version = "0.1.0";
   };
   fooga = { # Template with several attributes
     kind = "template";
     url = "https://example.com/fooga-0.1.0.tar.gz";
-    extra = {
-      template = "https://example.com/<name>-<version>.1.0.tar.gz";
-      attrs = {
-        name = "fooga";
-        version = "0.1.0";
-      };
+    template = "https://example.com/<name>-<version>.1.0.tar.gz";
+    attrs = {
+      name = "fooga";
+      version = "0.1.0";
     };
   };
-  nixos-unstable = { # A channel
+  nixpkgs = { # A channel
     kind = "channel";
     url = "https://releases.nixos.org/nixos/unstable/nixos-24.11pre641786.d603719ec6e2/nixexprs.tar.xz";
-    extra = {
-      template = "https://releases.nixos.org/nixos/unstable/<release>/nixexprs.tar.xz";
-      attrs = {
-        release = "nixos-24.11pre641786.d603719ec6e2";
-      };
+    template = "https://releases.nixos.org/nixos/unstable/nixos-<release>/nixexprs.tar.xz";
+    attrs = {
+      name = "nixos-unstable";
+      release = "nixos-24.11pre641786.d603719ec6e2";
     };
   };
   "lua-utils.nvim" = { # A git package
     kind = "git";
     url = "https://api.github.com/repos/nvim-neorg/lua-utils.nvim/tarball/v1.0.2";
-    extra = {
-      template = "https://api.github.com/repos/<owner>/<name>/tarball/<tag>";
-      attrs = {
-        owner = "nvim-neorg";
-        name = "lua-utils.nvim";
-        commit = "e565749421f4bbb5d2e85e37c3cef9d56553d8bd";
-        branch = "main";
-        tag = "v1.0.2";
-      };
+    template = "https://api.github.com/repos/<owner>/<name>/tarball/<tag>";
+    attrs = {
+      owner = "nvim-neorg";
+      name = "lua-utils.nvim";
+      commit = "e565749421f4bbb5d2e85e37c3cef9d56553d8bd";
+      branch = "main";
+      tag = "v1.0.2";
     };
   };
   "iswap.nvim" = { # A git package
     kind = "git";
     url = "https://github.com/mizlan/iswap.nvim/archive/e02cc91f2a8feb5c5a595767d208c54b6e3258ec.tar.gz";
-    extra = {
-      template = "https://github.com/<owner>/<name>/archive/<commit>.tar.gz";
-      attrs = {
-        owner = "mizlan";
-        name = "iswap.nvim";
-        commit = "e565749421f4bbb5d2e85e37c3cef9d56553d8bd";
-        branch = "master";
-        tag = null;
-      };
+    template = "https://github.com/<owner>/<name>/archive/<commit>.tar.gz";
+    attrs = {
+      owner = "mizlan";
+      name = "iswap.nvim";
+      commit = "e565749421f4bbb5d2e85e37c3cef9d56553d8bd";
+      branch = "master";
+      tag = null;
     };
   };
   # Gitlab would be similar as above but with `group` as well and other `url`
@@ -1026,6 +1015,10 @@ An example with all of the kinds above (`hash` and `outPath` omitted for brevity
 - Each pin's name is unchanged
 
 # Goals for *some* future release
+
+<!-- - Auto import of things? Per pin config? -->
+
+- A config option for rewriting repository names with `.` to `-`.
 
 - `weepin license` for polling licenses, generating NOTICE files and such?
 

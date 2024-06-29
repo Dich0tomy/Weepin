@@ -43,7 +43,7 @@ It contains the following files:
 
 It has to contain a `default.nix` file to be requirable from outside.
 
-The file will return a function that will accept a single attrset with a config. 
+The file will return a function that will accept a single attrset with a config.  
 For this release there's no config.
 
 The file will contain a loader mechanism which will read `sources.lock` and construct a special structure.
@@ -52,18 +52,48 @@ The file will contain a loader mechanism which will read `sources.lock` and cons
 
 <!-- TODO: Fill this out -->
 
-Classic JSON format.
+JSON format.
+It's best to make this file look as close to the generated structure as possible to reduce
+overhead.
+
+Notes:
+- The generated structure for `Channel` contains attr `name` - we don't store in the lock file,
+  because it's easily inferrable form the URL.
+
+- The generated structure for `Git` contains attrs `group`, `owner` and `name` - we don't store in the lock file,
+  because it's easily inferrable form the URL.
+  <!-- TODO: Think about branches, commits and tags here -->
+  <!-- TODO: Benchmark loading perf for large files, with locked attrs and with inferred ones -->
 
 ```json
 {
   "version": 1,
   "pins": {
-    "resource": {
+    "pinned resource": {
       "url": "https://example.com/resource-0.1.0.tar.gz",
+      "hash": "sha256---------------------------------"
     },
-    "resource2": {
-      "url": "https://example.com/resource-0.1.0.tar.gz", 
+    "template resource": {
+      "url": "https://example.com/resource-0.1.0.tar.gz",
+      "template": "https://example.com/resource-<version>.tar.gz",
+      "attrs": {
+        "version": "0.1.0"
+      }
     },
-  },
+    "channel resource": {
+      "url": "https://releases.nixos.org/nixos/unstable/nixos-24.11pre644565.b2852eb9365c/nixexprs.tar.xz",
+      "template": "https://releases.nixos.org/nixos/unstable/nixos-<release>/nixexprs.tar.xz",
+      "attrs": {
+        "release": "24.11pre644565.b2852eb9365c"
+      }
+    },
+    "git channel": {
+      "url": "https://github.com/cachix/pre-commit-hooks.nix/archive/cc4d466cb1254af050ff7bdf47f6d404a7c646d1.tar.gz",
+      "attrs": {
+        "branch": "main",
+        "commit": "................"
+      }
+    }
+  }
 }
 ```
