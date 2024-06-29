@@ -14,7 +14,7 @@
   libassert,
   cpptrace,
 }: let
-	self = ./../../../.;
+  self = ./../../../.;
   version = lib.fileContents "${self}/VERSION";
 in
   stdenv.mkDerivation (_this: {
@@ -29,15 +29,15 @@ in
     # TODO: Proper meson configure and shi
     mesonBuildType = "debug";
 
-		src = lib.fileset.toSource {
-			root = self;
-			fileset = lib.fileset.unions [
-				(self + /projects)
-				(self + /VERSION)
-				(self + /meson.build)
-				(self + /meson_options.txt)
-			];
-		};
+    src = lib.fileset.toSource {
+      root = self;
+      fileset = lib.fileset.unions [
+        (self + /projects)
+        (self + /VERSION)
+        (self + /meson.build)
+        (self + /meson_options.txt)
+      ];
+    };
 
     buildInputs = [
       magic-enum
