@@ -7,15 +7,12 @@
   devShells = {
     default = config.devShells.gcc;
 
-    gcc = pkgs.mkShell.override {stdenv = pkgs.gcc14.stdenv;} {
+    gcc = pkgs.mkShell.override {stdenv = pkgs.gcc14Stdenv;} {
       hardeningDisable = ["all"];
 
       inputsFrom = builtins.attrValues config.packages;
 
-      packages = [
-        pkgs.gcc14
-        config.treefmt.build.wrapper
-      ];
+      packages = [ config.treefmt.build.wrapper ];
 
       env = {
         CLANGD_PATH = lib.getExe' pkgs.clang-tools_18 "clangd";
