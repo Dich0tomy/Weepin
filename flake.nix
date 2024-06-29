@@ -11,11 +11,12 @@
 
       imports = [
         ./nix/treefmt.nix
+				./nix/packages
       ];
 
       perSystem = {...}: {
         imports = [
-          ./nix/shell
+          ./nix/shells.nix
           ./nix/bundled-libs
         ];
       };

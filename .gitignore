@@ -16,11 +16,12 @@
 !.clang-format
 
 # Build
+!VERSION
 !Justfile
 !meson.build
 !meson_options.build
 
 # Project dirs
 !nix/
-!docs/ 
+!docs/
 !projects/

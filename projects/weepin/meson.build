@@ -8,5 +8,6 @@ executable(
   'weepin',
   sources,
   include_directories: include_directories,
-  dependencies: [ weepin_core ]
+  dependencies: [ weepin_core ],
+  install: true
 )
