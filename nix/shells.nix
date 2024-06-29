@@ -12,7 +12,16 @@
 
       inputsFrom = builtins.attrValues config.packages;
 
-      packages = [ config.treefmt.build.wrapper ];
+      packages = [
+        config.treefmt.build.wrapper
+
+        # Debugging
+        pkgs.gdb
+        pkgs.rr
+
+        # Building
+        pkgs.ccache
+      ];
 
       env = {
         CLANGD_PATH = lib.getExe' pkgs.clang-tools_18 "clangd";
