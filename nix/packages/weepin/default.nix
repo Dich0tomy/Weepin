@@ -17,7 +17,7 @@
   self = ./../../../.;
   version = lib.fileContents "${self}/VERSION";
 in
-  stdenv.mkDerivation (_this: {
+  stdenv.mkDerivation {
     pname = "weepin";
     version = "${version}+nix";
 
@@ -56,4 +56,4 @@ in
       pkg-config
       just
     ];
-  })
+  }
