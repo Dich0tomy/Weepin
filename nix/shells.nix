@@ -7,7 +7,7 @@
   devShells = {
     default = config.devShells.gcc;
 
-    gcc = pkgs.mkShell.override {stdenv = pkgs.gcc14Stdenv;} {
+    gcc = pkgs.mkShell.override {stdenv = pkgs.useMoldLinker pkgs.gcc14Stdenv;} {
       hardeningDisable = ["all"];
 
       inputsFrom = builtins.attrValues config.packages;
